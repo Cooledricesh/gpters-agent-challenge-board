@@ -12,6 +12,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import { loadAllStudentProgress, toAdminView } from "@/lib/stats";
 import { challengeLevelLabel, groupChallengesByLevel, type ChallengeLevel } from "@/lib/challenges";
 import { loadChallengesOrdered, type ChallengeRowWithLevel } from "@/lib/load-challenges";
+import { formatWeightedScore } from "@/lib/progress";
 import AddChallengeForm from "./add-challenge-form";
 import AddStudentForm from "./add-student-form";
 import ChallengeLevelSelect from "./challenge-level-select";
@@ -42,10 +43,10 @@ export default async function AdminPage() {
   const adminView = toAdminView(students);
   const totalStudents = students.length;
   const totalCompletions = students.reduce((s, r) => s + r.completedCount, 0);
-  const avgPercent =
+  const avgWeightedScore =
     totalStudents === 0
       ? 0
-      : Math.round(students.reduce((s, r) => s + r.progressPercent, 0) / totalStudents);
+      : students.reduce((s, r) => s + r.weightedScore, 0) / totalStudents;
 
   const byChallenge = new Map<string, number>();
   for (const row of (completions ?? []) as { challenge_id: string }[]) {
@@ -66,7 +67,7 @@ export default async function AdminPage() {
         <Card label="수강생" value={`${totalStudents}명`} />
         <Card label="챌린지" value={`${challengeRows.length}개`} />
         <Card label="완료 누적" value={`${totalCompletions}회`} />
-        <Card label="평균 진척도" value={`${avgPercent}%`} />
+        <Card label="평균 가중 점수" value={formatWeightedScore(avgWeightedScore)} />
       </section>
 
       <section>
@@ -81,7 +82,7 @@ export default async function AdminPage() {
                   <th className="px-3 py-2">익명 라벨</th>
                   <th className="px-3 py-2">닉네임</th>
                   <th className="px-3 py-2">완료</th>
-                  <th className="px-3 py-2">진척도</th>
+                  <th className="px-3 py-2">가중 점수</th>
                   <th className="px-3 py-2">관리</th>
                 </tr>
               </thead>
@@ -95,7 +96,7 @@ export default async function AdminPage() {
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <span className="w-10 text-right tabular-nums">{s.progressPercent}%</span>
+                        <span className="w-16 text-right tabular-nums">{formatWeightedScore(s.weightedScore)}</span>
                         <div className="h-1.5 w-32 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                           <div
                             className="h-full bg-indigo-500"
@@ -170,7 +171,6 @@ function AdminChallengeSection({
       <ul className="space-y-2">
         {challenges.map((c) => {
           const completed = byChallenge.get(c.id) ?? 0;
-          const percent = totalStudents === 0 ? 0 : Math.round((completed / totalStudents) * 100);
           return (
             <li
               key={c.id}
@@ -187,7 +187,7 @@ function AdminChallengeSection({
                 </div>
                 <div className="flex shrink-0 items-start gap-3">
                   <span className="pt-1 text-zinc-500 tabular-nums">
-                    {completed}/{totalStudents} ({percent}%)
+                    {completed}/{totalStudents}
                   </span>
                   <ChallengeLevelSelect id={c.id} initialLevel={c.level} />
                 </div>

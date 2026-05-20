@@ -1,62 +1,70 @@
 /**
- * 공개 페이지 — 닉네임 노출 금지, 익명 라벨 + 진척도 높은 순.
+ * 공개 페이지 — 닉네임 노출 금지, 익명 라벨 + 가중 점수 높은 순.
  *
  * 데이터 소스: Supabase service client (RLS 우회). 익명 정보만 추출.
  * SSR: 매 요청마다 최신 진척도. 캐시 안 함.
  */
 
+import { getCurrentSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { countCompletionsByChallenge } from "@/lib/challenge-insights";
+import { challengeLevelLabel } from "@/lib/challenges";
+import { loadChallengesOrdered } from "@/lib/load-challenges";
+import { formatWeightedScore, challengeWeight } from "@/lib/progress";
 import { loadAllStudentProgress, toPublicView } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
-
-interface ChallengeRow {
-  id: string;
-  title: string;
-  order_index: number;
-}
 
 interface PublicData {
   appName: string;
   totalStudents: number;
   totalChallenges: number;
   totalCompletions: number;
-  avgPercent: number;
-  participants: { anonymousLabel: string; progressPercent: number }[];
-  challenges: { title: string; completedCount: number }[];
+  avgWeightedScore: number;
+  totalWeightedScore: number;
+  currentUserId: string | null;
+  participants: {
+    id: string;
+    anonymousLabel: string;
+    progressPercent: number;
+    weightedScore: number;
+  }[];
+  challenges: {
+    title: string;
+    level: "basic" | "advanced";
+    completedCount: number;
+  }[];
 }
 
 async function loadPublicData(): Promise<{ data: PublicData | null; error: string | null }> {
   try {
     const client = getSupabaseServiceClient();
-    const students = await loadAllStudentProgress(client);
+    const session = await getCurrentSession();
+    const [{ data: challenges, error: challengeError }, { data: completions, error: coErr }, students] =
+      await Promise.all([
+        loadChallengesOrdered(client),
+        client.from("completions").select("challenge_id"),
+        loadAllStudentProgress(client),
+      ]);
+    if (challengeError) throw challengeError;
+    if (coErr) throw coErr;
+
     const participants = toPublicView(students);
     const totalStudents = students.length;
-    const totalChallenges = students[0]?.totalChallenges ?? 0;
+    const totalChallenges = challenges.length;
     const totalCompletions = students.reduce((s, r) => s + r.completedCount, 0);
-    const avgPercent =
+    const totalWeightedScore = students[0]?.totalWeightedScore ?? 0;
+    const avgWeightedScore =
       totalStudents === 0
         ? 0
-        : Math.round(
-            students.reduce((s, r) => s + r.progressPercent, 0) / totalStudents,
-          );
+        : students.reduce((s, r) => s + r.weightedScore, 0) / totalStudents;
 
-    const { data: challenges, error: chErr } = await client
-      .from("challenges")
-      .select("id, title, order_index")
-      .order("order_index", { ascending: true })
-      .order("created_at", { ascending: true });
-    if (chErr) throw chErr;
-    const { data: completions, error: coErr } = await client
-      .from("completions")
-      .select("challenge_id");
-    if (coErr) throw coErr;
-    const byChallenge = new Map<string, number>();
-    for (const row of (completions ?? []) as { challenge_id: string }[]) {
-      byChallenge.set(row.challenge_id, (byChallenge.get(row.challenge_id) ?? 0) + 1);
-    }
-    const challengeStats = ((challenges ?? []) as ChallengeRow[]).map((c) => ({
+    const byChallenge = countCompletionsByChallenge(
+      (completions ?? []) as { challenge_id: string }[],
+    );
+    const challengeStats = challenges.map((c) => ({
       title: c.title,
+      level: c.level,
       completedCount: byChallenge.get(c.id) ?? 0,
     }));
 
@@ -66,7 +74,9 @@ async function loadPublicData(): Promise<{ data: PublicData | null; error: strin
         totalStudents,
         totalChallenges,
         totalCompletions,
-        avgPercent,
+        avgWeightedScore,
+        totalWeightedScore,
+        currentUserId: session?.role === "student" ? session.sub : null,
         participants,
         challenges: challengeStats,
       },
@@ -100,7 +110,7 @@ export default async function HomePage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">{data.appName}</h1>
         <p className="text-sm text-zinc-500">
-          공개 페이지에서는 닉네임이 보이지 않습니다. 익명 라벨과 진척도만 표시돼요.
+          공개 순위에서는 닉네임이 보이지 않습니다. 기본 과제는 1점, 고급 과제는 1.25점으로 계산해요.
         </p>
       </header>
 
@@ -108,7 +118,49 @@ export default async function HomePage() {
         <StatsCard label="참여자" value={`${data.totalStudents}명`} />
         <StatsCard label="챌린지" value={`${data.totalChallenges}개`} />
         <StatsCard label="완료 누적" value={`${data.totalCompletions}회`} />
-        <StatsCard label="평균 진척도" value={`${data.avgPercent}%`} />
+        <StatsCard label="평균 가중 점수" value={formatWeightedScore(data.avgWeightedScore)} />
+      </section>
+
+      <section className="rounded border border-indigo-100 bg-indigo-50/60 p-4 text-sm text-indigo-900 dark:border-indigo-950 dark:bg-indigo-950/30 dark:text-indigo-100">
+        <h2 className="font-semibold">가중치 안내</h2>
+        <p className="mt-1 text-xs leading-5">
+          기본 과제는 <strong>1점</strong>, 고급 과제는 <strong>1.25점</strong>입니다.
+          전체 순위는 완료 개수가 아니라 이 가중 점수가 높은 순으로 표시됩니다.
+          현재 전체 만점은 <strong>{formatWeightedScore(data.totalWeightedScore)}</strong>입니다.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">참여자 가중 점수 순위</h2>
+        {data.participants.length === 0 ? (
+          <p className="text-sm text-zinc-500">아직 등록된 참여자가 없습니다.</p>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {data.participants.map((p, index) => {
+              const isCurrent = data.currentUserId === p.id;
+              return (
+                <li
+                  key={p.anonymousLabel}
+                  className={`rounded border p-3 ${
+                    isCurrent
+                      ? "border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/40"
+                      : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
+                  }`}
+                >
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="font-medium">
+                      <span className="mr-2 text-zinc-400">#{index + 1}</span>
+                      {p.anonymousLabel}
+                      {isCurrent && <span className="ml-1 text-indigo-600 dark:text-indigo-300">(본인)</span>}
+                    </span>
+                    <span className="tabular-nums text-zinc-500">{formatWeightedScore(p.weightedScore)}</span>
+                  </div>
+                  <ProgressBar percent={p.progressPercent} />
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       <section>
@@ -124,41 +176,24 @@ export default async function HomePage() {
                   : Math.round((c.completedCount / data.totalStudents) * 100);
               return (
                 <li
-                  key={c.title}
+                  key={`${c.level}-${c.title}`}
                   className="rounded border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <div className="flex justify-between gap-3">
-                    <span className="font-medium">{c.title}</span>
+                    <span className="font-medium">
+                      {c.title}
+                      <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800">
+                        {challengeLevelLabel(c.level)} · {formatWeightedScore(challengeWeight(c.level))}
+                      </span>
+                    </span>
                     <span className="text-zinc-500">
-                      {c.completedCount}/{data.totalStudents} ({percent}%)
+                      {c.completedCount}/{data.totalStudents}
                     </span>
                   </div>
                   <ProgressBar percent={percent} />
                 </li>
               );
             })}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">참여자 진척도 (높은 순)</h2>
-        {data.participants.length === 0 ? (
-          <p className="text-sm text-zinc-500">아직 등록된 참여자가 없습니다.</p>
-        ) : (
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {data.participants.map((p) => (
-              <li
-                key={p.anonymousLabel}
-                className="rounded border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
-              >
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">{p.anonymousLabel}</span>
-                  <span className="tabular-nums text-zinc-500">{p.progressPercent}%</span>
-                </div>
-                <ProgressBar percent={p.progressPercent} />
-              </li>
-            ))}
           </ul>
         )}
       </section>

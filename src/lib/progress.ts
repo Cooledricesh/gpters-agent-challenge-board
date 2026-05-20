@@ -3,24 +3,33 @@
  *
  * 단위 테스트: src/lib/progress.test.ts
  * 도메인 결정사항(스펙):
- * - 공개 페이지: 닉네임 노출 금지, "챌린저 01" 형식 익명 라벨, 진척도 높은 순 정렬.
- * - 관리자 페이지: 닉네임 노출, 진척도 낮은 순(독려 대상 우선) 정렬.
+ * - 공개 페이지: 닉네임 노출 금지, "챌린저 01" 형식 익명 라벨, 가중 점수 높은 순 정렬.
+ * - 관리자 페이지: 닉네임 노출, 가중 점수 낮은 순(독려 대상 우선) 정렬.
+ * - 가중치: 기본 과제 1점, 고급 과제 1.25점.
  * - 비밀번호: 관리자가 수강생별로 직접 지정한 값을 bcrypt 해시로 저장한다.
  */
+
+import { normalizeChallengeLevel, type ChallengeLevel } from "./challenges";
+
+export const BASIC_CHALLENGE_WEIGHT = 1;
+export const ADVANCED_CHALLENGE_WEIGHT = 1.25;
 
 export interface PublicParticipant {
   anonymousLabel: string;
   progressPercent: number;
+  weightedScore: number;
 }
 
 export interface AdminParticipant {
   nickname: string;
   progressPercent: number;
+  weightedScore: number;
 }
 
 export interface RankableParticipant {
   id: string;
   progressPercent: number;
+  weightedScore: number;
 }
 
 export interface ParticipantRank {
@@ -28,6 +37,31 @@ export interface ParticipantRank {
   total: number;
   tiedCount: number;
   aheadCount: number;
+}
+
+export interface WeightedChallengeInput {
+  level: ChallengeLevel | string | null | undefined;
+  completed: boolean;
+}
+
+export function challengeWeight(level: ChallengeLevel | string | null | undefined): number {
+  return normalizeChallengeLevel(level) === "advanced"
+    ? ADVANCED_CHALLENGE_WEIGHT
+    : BASIC_CHALLENGE_WEIGHT;
+}
+
+export function calculateWeightedScore(challenges: readonly WeightedChallengeInput[]): number {
+  return challenges.reduce((sum, item) => sum + (item.completed ? challengeWeight(item.level) : 0), 0);
+}
+
+export function calculateTotalWeightedScore(
+  challenges: readonly Pick<WeightedChallengeInput, "level">[],
+): number {
+  return challenges.reduce((sum, item) => sum + challengeWeight(item.level), 0);
+}
+
+export function formatWeightedScore(score: number): string {
+  return `${Number(score.toFixed(2)).toLocaleString("ko-KR")}점`;
 }
 
 /**
@@ -50,37 +84,37 @@ export function calculateProgressPercent(completed: number, total: number): numb
 }
 
 /**
- * 공개 페이지 정렬: progressPercent DESC, tiebreak anonymousLabel ASC.
+ * 공개 페이지 정렬: weightedScore DESC, tiebreak anonymousLabel ASC.
  * 입력 배열을 직접 변형하지 않는다.
  */
 export function sortParticipantsForPublic<T extends PublicParticipant>(
   participants: readonly T[],
 ): T[] {
   return [...participants].sort((a, b) => {
-    if (b.progressPercent !== a.progressPercent) {
-      return b.progressPercent - a.progressPercent;
+    if (b.weightedScore !== a.weightedScore) {
+      return b.weightedScore - a.weightedScore;
     }
     return a.anonymousLabel.localeCompare(b.anonymousLabel, "ko");
   });
 }
 
 /**
- * 관리자 페이지 정렬: progressPercent ASC(독려 대상 먼저), tiebreak nickname ASC.
+ * 관리자 페이지 정렬: weightedScore ASC(독려 대상 먼저), tiebreak nickname ASC.
  * 입력 배열을 직접 변형하지 않는다.
  */
 export function sortParticipantsForAdmin<T extends AdminParticipant>(
   participants: readonly T[],
 ): T[] {
   return [...participants].sort((a, b) => {
-    if (a.progressPercent !== b.progressPercent) {
-      return a.progressPercent - b.progressPercent;
+    if (a.weightedScore !== b.weightedScore) {
+      return a.weightedScore - b.weightedScore;
     }
     return a.nickname.localeCompare(b.nickname, "ko");
   });
 }
 
 /**
- * 전체 진행률 기준 순위. 같은 진행률은 같은 등수로 처리한다(competition ranking).
+ * 전체 가중 점수 기준 순위. 같은 점수는 같은 등수로 처리한다(competition ranking).
  */
 export function rankParticipant(
   participantId: string,
@@ -89,8 +123,8 @@ export function rankParticipant(
   const me = participants.find((p) => p.id === participantId);
   if (!me) return null;
 
-  const aheadCount = participants.filter((p) => p.progressPercent > me.progressPercent).length;
-  const tiedCount = participants.filter((p) => p.progressPercent === me.progressPercent).length;
+  const aheadCount = participants.filter((p) => p.weightedScore > me.weightedScore).length;
+  const tiedCount = participants.filter((p) => p.weightedScore === me.weightedScore).length;
   return {
     rank: aheadCount + 1,
     total: participants.length,

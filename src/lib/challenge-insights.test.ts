@@ -26,4 +26,10 @@ describe("challenge insights", () => {
       "아직 아무도 완료하지 않았어요",
     );
   });
+
+  it("shows completion counts without percentage noise", () => {
+    expect(challengeCompletionInsight({ completedCount: 3, totalStudents: 31, done: false })).toBe(
+      "3명이 완료했어요",
+    );
+  });
 });

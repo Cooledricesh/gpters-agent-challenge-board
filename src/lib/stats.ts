@@ -3,7 +3,7 @@
  *
  * 데이터 흐름:
  *   1. Supabase에서 app_users / challenges / completions 조회
- *   2. challengeCount + per-user completionCount 계산
+ *   2. challengeCount + per-user completionCount/weightedScore 계산
  *   3. progress.ts의 정렬·라벨 헬퍼로 공개·관리자 뷰 생성
  *
  * 이 모듈은 supabase 클라이언트를 직접 만들지 않는다. 호출자가 주입한다(테스트 용이).
@@ -13,12 +13,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   calculateProgressPercent,
+  calculateTotalWeightedScore,
+  calculateWeightedScore,
   makeAnonymousLabel,
   sortParticipantsForAdmin,
   sortParticipantsForPublic,
   type AdminParticipant,
   type PublicParticipant,
 } from "./progress";
+import { loadChallengesOrdered } from "./load-challenges";
 
 export interface StudentRow {
   id: string;
@@ -28,6 +31,8 @@ export interface StudentRow {
   completedCount: number;
   totalChallenges: number;
   progressPercent: number;
+  weightedScore: number;
+  totalWeightedScore: number;
 }
 
 interface AppUserRow {
@@ -40,40 +45,52 @@ interface AppUserRow {
 
 interface CompletionRow {
   user_id: string;
+  challenge_id: string;
 }
 
 /**
  * 모든 수강생의 진행률을 한 번에 집계한다.
- * Supabase 호출 3회(users, challenges count, completions). 결과는 클라이언트가 즉시 정렬 가능.
+ * Supabase 호출 3회(users, challenges, completions). 결과는 클라이언트가 즉시 정렬 가능.
  */
 export async function loadAllStudentProgress(
   client: SupabaseClient,
 ): Promise<StudentRow[]> {
   const [
     { data: users, error: usersError },
-    { count: challengeCount, error: challengeError },
+    challengeResult,
     { data: completions, error: completionError },
   ] = await Promise.all([
     client
       .from("app_users")
       .select("id, nickname, role, anonymous_label, anonymous_index")
       .eq("role", "student"),
-    client.from("challenges").select("*", { count: "exact", head: true }),
-    client.from("completions").select("user_id"),
+    loadChallengesOrdered(client),
+    client.from("completions").select("user_id, challenge_id"),
   ]);
 
   if (usersError) throw usersError;
-  if (challengeError) throw challengeError;
+  if (challengeResult.error) throw challengeResult.error;
   if (completionError) throw completionError;
 
-  const total = challengeCount ?? 0;
-  const completedByUser = new Map<string, number>();
+  const challenges = challengeResult.data;
+  const total = challenges.length;
+  const totalWeightedScore = calculateTotalWeightedScore(challenges);
+  const challengeById = new Map(challenges.map((challenge) => [challenge.id, challenge]));
+  const completedByUser = new Map<string, CompletionRow[]>();
   for (const row of (completions ?? []) as CompletionRow[]) {
-    completedByUser.set(row.user_id, (completedByUser.get(row.user_id) ?? 0) + 1);
+    const bucket = completedByUser.get(row.user_id) ?? [];
+    bucket.push(row);
+    completedByUser.set(row.user_id, bucket);
   }
 
   return ((users ?? []) as AppUserRow[]).map((u) => {
-    const completed = completedByUser.get(u.id) ?? 0;
+    const completedRows = completedByUser.get(u.id) ?? [];
+    const weightedScore = calculateWeightedScore(
+      completedRows.map((row) => ({
+        level: challengeById.get(row.challenge_id)?.level ?? "basic",
+        completed: true,
+      })),
+    );
     return {
       id: u.id,
       nickname: u.nickname,
@@ -81,28 +98,35 @@ export async function loadAllStudentProgress(
         u.anonymous_label ??
         (u.anonymous_index ? makeAnonymousLabel(u.anonymous_index) : "챌린저 --"),
       anonymousIndex: u.anonymous_index,
-      completedCount: completed,
+      completedCount: completedRows.length,
       totalChallenges: total,
-      progressPercent: calculateProgressPercent(completed, total),
+      progressPercent: calculateProgressPercent(weightedScore, totalWeightedScore),
+      weightedScore,
+      totalWeightedScore,
     };
   });
 }
 
-/** 공개 뷰(닉네임 숨김, 진척도 높은 순). */
-export function toPublicView(rows: readonly StudentRow[]): PublicParticipant[] {
+/** 공개 뷰(닉네임 숨김, 가중 점수 높은 순). */
+export function toPublicView(rows: readonly StudentRow[]): (PublicParticipant & {
+  id: string;
+})[] {
   const mapped = rows.map((r) => ({
+    id: r.id,
     anonymousLabel: r.anonymousLabel,
     progressPercent: r.progressPercent,
+    weightedScore: r.weightedScore,
   }));
   return sortParticipantsForPublic(mapped);
 }
 
-/** 관리자 뷰(닉네임 노출, 진척도 낮은 순). */
+/** 관리자 뷰(닉네임 노출, 가중 점수 낮은 순). */
 export function toAdminView(rows: readonly StudentRow[]): (AdminParticipant & {
   id: string;
   anonymousLabel: string;
   completedCount: number;
   totalChallenges: number;
+  totalWeightedScore: number;
 })[] {
   const mapped = rows.map((r) => ({
     id: r.id,
@@ -111,6 +135,8 @@ export function toAdminView(rows: readonly StudentRow[]): (AdminParticipant & {
     completedCount: r.completedCount,
     totalChallenges: r.totalChallenges,
     progressPercent: r.progressPercent,
+    weightedScore: r.weightedScore,
+    totalWeightedScore: r.totalWeightedScore,
   }));
   return sortParticipantsForAdmin(mapped);
 }

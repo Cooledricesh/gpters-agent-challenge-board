@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import {
-  calculateProgressPercent,
+  formatWeightedScore,
   getMotivationalMessage,
   rankParticipant,
   type ParticipantRank,
@@ -49,6 +49,7 @@ export default async function MyPage() {
     );
   }
 
+  const me = allStudents.find((student) => student.id === session.sub);
   const doneSet = new Set(
     ((myCompletions ?? []) as { challenge_id: string }[]).map((r) => r.challenge_id),
   );
@@ -56,8 +57,9 @@ export default async function MyPage() {
     (allCompletions ?? []) as { challenge_id: string }[],
   );
   const totalStudents = allStudents.length;
-  const percent = calculateProgressPercent(doneSet.size, challengeRows.length);
-  const message = getMotivationalMessage(percent);
+  const weightedScore = me?.weightedScore ?? 0;
+  const totalWeightedScore = me?.totalWeightedScore ?? 0;
+  const message = getMotivationalMessage(me?.progressPercent ?? 0);
   const rank = rankParticipant(session.sub, allStudents);
 
   return (
@@ -69,10 +71,10 @@ export default async function MyPage() {
         <h1 className="mt-1 text-2xl font-semibold">
           {session.nickname} 님, 환영합니다
         </h1>
-        <div className="mt-3 flex items-end gap-3">
-          <span className="text-4xl font-bold tabular-nums">{percent}%</span>
+        <div className="mt-3 flex flex-wrap items-end gap-3">
+          <span className="text-4xl font-bold tabular-nums">{formatWeightedScore(weightedScore)}</span>
           <span className="pb-1 text-sm text-zinc-500">
-            {doneSet.size} / {challengeRows.length} 완료
+            만점 {formatWeightedScore(totalWeightedScore)} · {doneSet.size} / {challengeRows.length} 완료
           </span>
         </div>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{message}</p>
@@ -83,6 +85,8 @@ export default async function MyPage() {
         completedCount={doneSet.size}
         totalChallenges={challengeRows.length}
         totalStudents={totalStudents}
+        weightedScore={weightedScore}
+        totalWeightedScore={totalWeightedScore}
       />
 
       <section>
@@ -112,11 +116,15 @@ function PersonalStats({
   completedCount,
   totalChallenges,
   totalStudents,
+  weightedScore,
+  totalWeightedScore,
 }: {
   rank: ParticipantRank | null;
   completedCount: number;
   totalChallenges: number;
   totalStudents: number;
+  weightedScore: number;
+  totalWeightedScore: number;
 }) {
   const rankMessage = rank
     ? rank.tiedCount > 1
@@ -133,14 +141,14 @@ function PersonalStats({
     <section className="grid gap-3 sm:grid-cols-3">
       <StatCard label="내 순위" value={rankMessage} hint={chaseMessage} />
       <StatCard
-        label="내 완료"
-        value={`${completedCount}/${totalChallenges}`}
-        hint="체크할수록 공개 순위에도 반영돼요"
+        label="내 가중 점수"
+        value={`${formatWeightedScore(weightedScore)} / ${formatWeightedScore(totalWeightedScore)}`}
+        hint="기본 1점, 고급 1.25점으로 계산"
       />
       <StatCard
         label="참여 현황"
         value={`${totalStudents}명 참여`}
-        hint="과제별 완료 인원은 아래에서 확인"
+        hint={`${completedCount}/${totalChallenges}개 완료 · 과제별 완료 인원은 아래에서 확인`}
       />
     </section>
   );

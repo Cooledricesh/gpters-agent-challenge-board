@@ -14,7 +14,6 @@ export function countCompletionsByChallenge(
 
 export function challengeCompletionInsight({
   completedCount,
-  totalStudents,
   done,
 }: {
   completedCount: number;
@@ -23,6 +22,5 @@ export function challengeCompletionInsight({
 }): string {
   if (completedCount <= 0) return "아직 아무도 완료하지 않았어요";
   if (done && completedCount === 1) return "나만 완료했어요! 선두 주자예요 ✨";
-  const percent = totalStudents <= 0 ? 0 : Math.round((completedCount / totalStudents) * 100);
-  return `${completedCount}명이 완료했어요 (${percent}%)`;
+  return `${completedCount}명이 완료했어요`;
 }
