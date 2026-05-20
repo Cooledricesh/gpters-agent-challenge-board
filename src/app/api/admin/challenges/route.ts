@@ -9,10 +9,12 @@ import { z } from "zod";
 
 import { requireSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { normalizeChallengeLevel } from "@/lib/challenges";
 
 const Body = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(500).nullable().optional(),
+  level: z.enum(["basic", "advanced"]).optional(),
 });
 
 export async function POST(request: Request) {
@@ -41,17 +43,29 @@ export async function POST(request: Request) {
   }
   const nextOrder = (maxRow?.order_index ?? 0) + 1;
 
+  const level = normalizeChallengeLevel(parsed.level);
   const { data, error } = await client
     .from("challenges")
     .insert({
       title: parsed.title,
       description: parsed.description ?? null,
       order_index: nextOrder,
+      level,
     })
-    .select("id, title, order_index")
+    .select("id, title, order_index, level")
     .single();
   if (error || !data) {
-    return NextResponse.json({ ok: false, error: error?.message ?? "등록 실패" }, { status: 500 });
+    const message = error?.message ?? "등록 실패";
+    const isMissingLevel = message.includes("level") || message.includes("schema cache");
+    return NextResponse.json(
+      {
+        ok: false,
+        error: isMissingLevel
+          ? "Supabase SQL Editor에서 최신 supabase/schema.sql을 먼저 실행해주세요."
+          : message,
+      },
+      { status: 500 },
+    );
   }
   return NextResponse.json({ ok: true, challenge: data });
 }

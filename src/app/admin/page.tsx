@@ -10,32 +10,23 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { loadAllStudentProgress, toAdminView } from "@/lib/stats";
+import { challengeLevelLabel, groupChallengesByLevel, type ChallengeLevel } from "@/lib/challenges";
+import { loadChallengesOrdered, type ChallengeRowWithLevel } from "@/lib/load-challenges";
 import AddChallengeForm from "./add-challenge-form";
 import AddStudentForm from "./add-student-form";
 import StudentActions from "./student-actions";
 
 export const dynamic = "force-dynamic";
 
-interface ChallengeRow {
-  id: string;
-  title: string;
-  description: string | null;
-  order_index: number;
-}
-
 export default async function AdminPage() {
   const session = await requireSession("admin");
   if (!session) redirect("/login");
 
   const client = getSupabaseServiceClient();
-  const [students, { data: challenges, error: chErr }, { data: completions, error: coErr }] =
+  const [students, { data: challengeRows, error: chErr }, { data: completions, error: coErr }] =
     await Promise.all([
       loadAllStudentProgress(client),
-      client
-        .from("challenges")
-        .select("id, title, description, order_index")
-        .order("order_index", { ascending: true })
-        .order("created_at", { ascending: true }),
+      loadChallengesOrdered(client),
       client.from("completions").select("challenge_id"),
     ]);
 
@@ -47,7 +38,6 @@ export default async function AdminPage() {
     );
   }
 
-  const challengeRows = (challenges ?? []) as ChallengeRow[];
   const adminView = toAdminView(students);
   const totalStudents = students.length;
   const totalCompletions = students.reduce((s, r) => s + r.completedCount, 0);
@@ -60,6 +50,7 @@ export default async function AdminPage() {
   for (const row of (completions ?? []) as { challenge_id: string }[]) {
     byChallenge.set(row.challenge_id, (byChallenge.get(row.challenge_id) ?? 0) + 1);
   }
+  const groupedChallenges = groupChallengesByLevel(challengeRows);
 
   return (
     <div className="flex flex-col gap-8 py-4">
@@ -128,31 +119,20 @@ export default async function AdminPage() {
         {challengeRows.length === 0 ? (
           <p className="text-sm text-zinc-500">아직 등록된 챌린지가 없습니다.</p>
         ) : (
-          <ul className="space-y-2">
-            {challengeRows.map((c) => {
-              const completed = byChallenge.get(c.id) ?? 0;
-              const percent =
-                totalStudents === 0 ? 0 : Math.round((completed / totalStudents) * 100);
-              return (
-                <li
-                  key={c.id}
-                  className="rounded border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                  <div className="flex justify-between gap-3">
-                    <span className="font-medium">{c.title}</span>
-                    <span className="text-zinc-500 tabular-nums">
-                      {completed}/{totalStudents} ({percent}%)
-                    </span>
-                  </div>
-                  {c.description && (
-                    <p className="mt-0.5 text-xs text-zinc-500 whitespace-pre-line">
-                      {c.description}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <div className="space-y-5">
+            <AdminChallengeSection
+              level="basic"
+              challenges={groupedChallenges.basic}
+              byChallenge={byChallenge}
+              totalStudents={totalStudents}
+            />
+            <AdminChallengeSection
+              level="advanced"
+              challenges={groupedChallenges.advanced}
+              byChallenge={byChallenge}
+              totalStudents={totalStudents}
+            />
+          </div>
         )}
       </section>
 
@@ -167,6 +147,50 @@ export default async function AdminPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function AdminChallengeSection({
+  level,
+  challenges,
+  byChallenge,
+  totalStudents,
+}: {
+  level: ChallengeLevel;
+  challenges: ChallengeRowWithLevel[];
+  byChallenge: Map<string, number>;
+  totalStudents: number;
+}) {
+  if (challenges.length === 0) return null;
+
+  return (
+    <section>
+      <h3 className="mb-2 text-base font-semibold">{challengeLevelLabel(level)}</h3>
+      <ul className="space-y-2">
+        {challenges.map((c) => {
+          const completed = byChallenge.get(c.id) ?? 0;
+          const percent = totalStudents === 0 ? 0 : Math.round((completed / totalStudents) * 100);
+          return (
+            <li
+              key={c.id}
+              className="rounded border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex justify-between gap-3">
+                <span className="font-medium">{c.title}</span>
+                <span className="text-zinc-500 tabular-nums">
+                  {completed}/{totalStudents} ({percent}%)
+                </span>
+              </div>
+              {c.description && (
+                <p className="mt-0.5 text-xs text-zinc-500 whitespace-pre-line">
+                  {c.description}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

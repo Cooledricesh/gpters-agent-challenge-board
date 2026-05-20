@@ -3,7 +3,7 @@
 -- 설계 원칙:
 --   * 수강생 비밀번호는 관리자가 직접 지정하고 password_hash만 보관한다.
 --   * anonymous_label("챌린저 01")은 공개 페이지 노출용. nickname은 관리자만 본다.
---   * 챌린지는 날짜 없음. order_index 오름차순으로 표시.
+--   * 챌린지는 날짜 없음. level별로 분리하고, 각 섹션 안에서는 order_index 오름차순으로 표시.
 --   * 수강생 완료 토글: completions 테이블 (user_id, challenge_id) 유니크.
 
 -- =========================
@@ -39,14 +39,40 @@ create table if not exists public.challenges (
   id          uuid primary key default gen_random_uuid(),
   title       text not null,
   description text,
+  -- basic=기본 과제, advanced=고급 과제.
+  level       text not null default 'basic' check (level in ('basic', 'advanced')),
   -- 표시 순서. 관리자 등록 순으로 자동 증가시키되 수동 정렬도 허용.
   order_index integer not null default 0,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
 
+-- 기존 테이블에 level 컬럼이 없는 경우 추가한다. 기존 챌린지는 기본 과제로 둔다.
+alter table public.challenges
+  add column if not exists level text not null default 'basic';
+
+update public.challenges
+set level = 'basic'
+where level is null or level not in ('basic', 'advanced');
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'challenges_level_check'
+      and conrelid = 'public.challenges'::regclass
+  ) then
+    alter table public.challenges
+      add constraint challenges_level_check check (level in ('basic', 'advanced'));
+  end if;
+end $$;
+
 create index if not exists challenges_order_idx
   on public.challenges (order_index, created_at);
+
+create index if not exists challenges_level_order_idx
+  on public.challenges (level, order_index, created_at);
 
 -- =========================
 -- 3. completions

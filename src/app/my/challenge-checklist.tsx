@@ -3,10 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { challengeLevelLabel, groupChallengesByLevel, type ChallengeLevel } from "@/lib/challenges";
+
 interface ChallengeItem {
   id: string;
   title: string;
   description: string | null;
+  level: ChallengeLevel;
   done: boolean;
 }
 
@@ -46,13 +49,54 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
     });
   };
 
+  const grouped = groupChallengesByLevel(items);
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       {error && (
         <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
           {error}
         </p>
       )}
+      <ChallengeSection
+        title={challengeLevelLabel("basic")}
+        subtitle="처음 시작하는 분들을 위한 핵심 챌린지"
+        items={grouped.basic}
+        pendingId={pendingId}
+        onToggle={toggle}
+      />
+      <ChallengeSection
+        title={challengeLevelLabel("advanced")}
+        subtitle="조금 더 깊게 해보고 싶은 분들을 위한 확장 챌린지"
+        items={grouped.advanced}
+        pendingId={pendingId}
+        onToggle={toggle}
+      />
+    </div>
+  );
+}
+
+function ChallengeSection({
+  title,
+  subtitle,
+  items,
+  pendingId,
+  onToggle,
+}: {
+  title: string;
+  subtitle: string;
+  items: ChallengeItem[];
+  pendingId: string | null;
+  onToggle: (id: string, nextDone: boolean) => void;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-2">
+      <div>
+        <h3 className="text-base font-semibold">{title}</h3>
+        <p className="text-xs text-zinc-500">{subtitle}</p>
+      </div>
       <ul className="flex flex-col gap-2">
         {items.map((it) => {
           const isPending = pendingId === it.id;
@@ -65,7 +109,7 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
                 type="checkbox"
                 checked={it.done}
                 disabled={isPending}
-                onChange={(e) => toggle(it.id, e.target.checked)}
+                onChange={(e) => onToggle(it.id, e.target.checked)}
                 className="mt-1 size-5 accent-indigo-600"
               />
               <div className="flex-1">
@@ -82,6 +126,6 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }

@@ -13,29 +13,19 @@ import {
   calculateProgressPercent,
   getMotivationalMessage,
 } from "@/lib/progress";
+import { loadChallengesOrdered } from "@/lib/load-challenges";
 import ChallengeChecklist from "./challenge-checklist";
 
 export const dynamic = "force-dynamic";
-
-interface ChallengeRow {
-  id: string;
-  title: string;
-  description: string | null;
-  order_index: number;
-}
 
 export default async function MyPage() {
   const session = await requireSession("student");
   if (!session) redirect("/login");
 
   const client = getSupabaseServiceClient();
-  const [{ data: challenges, error: chErr }, { data: completions, error: coErr }] =
+  const [{ data: challengeRows, error: chErr }, { data: completions, error: coErr }] =
     await Promise.all([
-      client
-        .from("challenges")
-        .select("id, title, description, order_index")
-        .order("order_index", { ascending: true })
-        .order("created_at", { ascending: true }),
+      loadChallengesOrdered(client),
       client.from("completions").select("challenge_id").eq("user_id", session.sub),
     ]);
 
@@ -47,7 +37,6 @@ export default async function MyPage() {
     );
   }
 
-  const challengeRows = (challenges ?? []) as ChallengeRow[];
   const doneSet = new Set(
     ((completions ?? []) as { challenge_id: string }[]).map((r) => r.challenge_id),
   );
@@ -82,6 +71,7 @@ export default async function MyPage() {
               id: c.id,
               title: c.title,
               description: c.description,
+              level: c.level,
               done: doneSet.has(c.id),
             }))}
           />
