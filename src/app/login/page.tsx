@@ -4,7 +4,7 @@
  * 수강생: 닉네임 + 관리자가 지정한 비밀번호.
  * 관리자: 닉네임 "admin" + ADMIN_PASSWORD env(기본 5231).
  *
- * 이미 로그인되어 있으면 역할에 맞춰 즉시 리다이렉트.
+ * 이미 로그인되어 있으면 관리자는 관리자 화면, 수강생은 공개 순위 화면으로 이동.
  */
 
 import { redirect } from "next/navigation";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage() {
   const session = await getCurrentSession();
   if (session?.role === "admin") redirect("/admin");
-  if (session?.role === "student") redirect("/my");
+  if (session?.role === "student") redirect("/");
 
   return (
     <section className="mx-auto flex w-full max-w-sm flex-col gap-6 py-12">

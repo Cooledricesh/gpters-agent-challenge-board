@@ -6,6 +6,7 @@
  */
 
 import { getCurrentSession } from "@/lib/session";
+import Link from "next/link";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { countCompletionsByChallenge } from "@/lib/challenge-insights";
 import { challengeLevelLabel } from "@/lib/challenges";
@@ -113,6 +114,47 @@ export default async function HomePage() {
           공개 순위에서는 닉네임이 보이지 않습니다. 기본 과제는 1점, 고급 과제는 1.25점으로 계산해요.
         </p>
       </header>
+
+      {data.currentUserId ? (
+        <section className="overflow-hidden rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-violet-50 p-5 shadow-sm dark:border-orange-900/70 dark:from-orange-950/30 dark:via-zinc-900 dark:to-violet-950/30">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600 dark:text-orange-300">
+                오늘의 체크인
+              </p>
+              <h2 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-white">
+                내 챌린지 완료하러 가기
+              </h2>
+              <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                체크하면 내 점수와 순위가 바로 반영돼요. 지금 완료한 과제부터 톡톡 눌러주세요.
+              </p>
+            </div>
+            <Link
+              href="/my"
+              className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-orange-500 to-indigo-600 px-6 py-4 text-base font-extrabold text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-orange-200 dark:focus:ring-orange-900"
+            >
+              내 챌린지 체크하기 →
+            </Link>
+          </div>
+        </section>
+      ) : (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-bold">챌린지에 참여 중이라면 로그인해 주세요</h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                로그인하면 익명 순위에서 내 위치를 확인하고, 내 챌린지를 바로 체크할 수 있어요.
+              </p>
+            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-xl bg-zinc-950 px-5 py-3 text-sm font-bold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+            >
+              로그인하기
+            </Link>
+          </div>
+        </section>
+      )}
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatsCard label="참여자" value={`${data.totalStudents}명`} />

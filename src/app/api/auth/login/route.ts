@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     const token = await createSessionToken({ sub: user.id, nickname: user.nickname, role: "student" });
     const store = await cookies();
     store.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
-    return NextResponse.json({ ok: true, redirect: "/my" });
+    return NextResponse.json({ ok: true, redirect: "/" });
   } catch (err) {
     const message = err instanceof Error ? err.message : "알 수 없는 오류";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
