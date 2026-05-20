@@ -14,6 +14,7 @@ import { challengeLevelLabel, groupChallengesByLevel, type ChallengeLevel } from
 import { loadChallengesOrdered, type ChallengeRowWithLevel } from "@/lib/load-challenges";
 import AddChallengeForm from "./add-challenge-form";
 import AddStudentForm from "./add-student-form";
+import ChallengeLevelSelect from "./challenge-level-select";
 import StudentActions from "./student-actions";
 
 export const dynamic = "force-dynamic";
@@ -176,16 +177,21 @@ function AdminChallengeSection({
               className="rounded border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
             >
               <div className="flex justify-between gap-3">
-                <span className="font-medium">{c.title}</span>
-                <span className="text-zinc-500 tabular-nums">
-                  {completed}/{totalStudents} ({percent}%)
-                </span>
+                <div>
+                  <span className="font-medium">{c.title}</span>
+                  {c.description && (
+                    <p className="mt-0.5 text-xs text-zinc-500 whitespace-pre-line">
+                      {c.description}
+                    </p>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-start gap-3">
+                  <span className="pt-1 text-zinc-500 tabular-nums">
+                    {completed}/{totalStudents} ({percent}%)
+                  </span>
+                  <ChallengeLevelSelect id={c.id} initialLevel={c.level} />
+                </div>
               </div>
-              {c.description && (
-                <p className="mt-0.5 text-xs text-zinc-500 whitespace-pre-line">
-                  {c.description}
-                </p>
-              )}
             </li>
           );
         })}
