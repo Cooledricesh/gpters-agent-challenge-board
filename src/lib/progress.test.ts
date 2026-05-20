@@ -5,6 +5,7 @@ import {
   getMotivationalMessage,
   makeAnonymousLabel,
   nextAnonymousIndex,
+  rankParticipant,
   sortParticipantsForAdmin,
   sortParticipantsForPublic,
 } from "./progress";
@@ -43,6 +44,21 @@ describe("progress helpers", () => {
     ]);
 
     expect(sorted.map((item) => item.nickname)).toEqual(["B", "C", "A"]);
+  });
+
+  it("ranks a participant by progress with competition ranking", () => {
+    const rank = rankParticipant("u3", [
+      { id: "u1", progressPercent: 100 },
+      { id: "u2", progressPercent: 80 },
+      { id: "u3", progressPercent: 80 },
+      { id: "u4", progressPercent: 20 },
+    ]);
+
+    expect(rank).toEqual({ rank: 2, total: 4, tiedCount: 2, aheadCount: 1 });
+  });
+
+  it("returns null rank for missing participants", () => {
+    expect(rankParticipant("missing", [{ id: "u1", progressPercent: 100 }])).toBeNull();
   });
 
   it("returns a completion message at 100 percent", () => {

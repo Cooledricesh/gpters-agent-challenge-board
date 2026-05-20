@@ -4,12 +4,15 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { challengeLevelLabel, groupChallengesByLevel, type ChallengeLevel } from "@/lib/challenges";
+import { challengeCompletionInsight } from "@/lib/challenge-insights";
 
 interface ChallengeItem {
   id: string;
   title: string;
   description: string | null;
   level: ChallengeLevel;
+  completedCount: number;
+  totalStudents: number;
   done: boolean;
 }
 
@@ -23,8 +26,18 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
   const toggle = (id: string, nextDone: boolean) => {
     setError(null);
     setPendingId(id);
-    // optimistic
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, done: nextDone } : it)));
+    // optimistic: 체크 즉시 개인 화면의 과제별 완료 인원도 반영한다.
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== id || it.done === nextDone) return it;
+        const delta = nextDone ? 1 : -1;
+        return {
+          ...it,
+          done: nextDone,
+          completedCount: Math.max(0, Math.min(it.totalStudents, it.completedCount + delta)),
+        };
+      }),
+    );
     startTransition(async () => {
       try {
         const res = await fetch("/api/my/completions", {
@@ -35,13 +48,33 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
         const json = await res.json();
         if (!res.ok || !json.ok) {
           // rollback
-          setItems((prev) => prev.map((it) => (it.id === id ? { ...it, done: !nextDone } : it)));
+          setItems((prev) =>
+            prev.map((it) => {
+              if (it.id !== id || it.done !== nextDone) return it;
+              const delta = nextDone ? -1 : 1;
+              return {
+                ...it,
+                done: !nextDone,
+                completedCount: Math.max(0, Math.min(it.totalStudents, it.completedCount + delta)),
+              };
+            }),
+          );
           setError(json.error ?? "토글 실패");
         } else {
           router.refresh();
         }
       } catch (err) {
-        setItems((prev) => prev.map((it) => (it.id === id ? { ...it, done: !nextDone } : it)));
+        setItems((prev) =>
+          prev.map((it) => {
+            if (it.id !== id || it.done !== nextDone) return it;
+            const delta = nextDone ? -1 : 1;
+            return {
+              ...it,
+              done: !nextDone,
+              completedCount: Math.max(0, Math.min(it.totalStudents, it.completedCount + delta)),
+            };
+          }),
+        );
         setError(err instanceof Error ? err.message : "네트워크 오류");
       } finally {
         setPendingId(null);
@@ -100,6 +133,11 @@ function ChallengeSection({
       <ul className="flex flex-col gap-2">
         {items.map((it) => {
           const isPending = pendingId === it.id;
+          const insight = challengeCompletionInsight({
+            completedCount: it.completedCount,
+            totalStudents: it.totalStudents,
+            done: it.done,
+          });
           return (
             <li
               key={it.id}
@@ -121,6 +159,9 @@ function ChallengeSection({
                     {it.description}
                   </p>
                 )}
+                <p className="mt-2 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">
+                  {insight}
+                </p>
               </div>
             </li>
           );

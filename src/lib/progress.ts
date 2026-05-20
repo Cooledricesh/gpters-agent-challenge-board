@@ -18,6 +18,18 @@ export interface AdminParticipant {
   progressPercent: number;
 }
 
+export interface RankableParticipant {
+  id: string;
+  progressPercent: number;
+}
+
+export interface ParticipantRank {
+  rank: number;
+  total: number;
+  tiedCount: number;
+  aheadCount: number;
+}
+
 /**
  * 익명 라벨 생성: "챌린저 01", "챌린저 31" 등 두 자리 0-pad.
  * 운영자가 수강생 등록 시 발급한 anonymous_index를 받아 변환한다.
@@ -65,6 +77,26 @@ export function sortParticipantsForAdmin<T extends AdminParticipant>(
     }
     return a.nickname.localeCompare(b.nickname, "ko");
   });
+}
+
+/**
+ * 전체 진행률 기준 순위. 같은 진행률은 같은 등수로 처리한다(competition ranking).
+ */
+export function rankParticipant(
+  participantId: string,
+  participants: readonly RankableParticipant[],
+): ParticipantRank | null {
+  const me = participants.find((p) => p.id === participantId);
+  if (!me) return null;
+
+  const aheadCount = participants.filter((p) => p.progressPercent > me.progressPercent).length;
+  const tiedCount = participants.filter((p) => p.progressPercent === me.progressPercent).length;
+  return {
+    rank: aheadCount + 1,
+    total: participants.length,
+    tiedCount,
+    aheadCount,
+  };
 }
 
 /**
