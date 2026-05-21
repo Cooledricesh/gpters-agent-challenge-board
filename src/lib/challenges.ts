@@ -1,5 +1,19 @@
 export type ChallengeLevel = "basic" | "advanced";
 
+export interface EditableChallengeInput {
+  title: string;
+  description?: string | null;
+  detail?: string | null;
+  level?: string | null;
+}
+
+export interface NormalizedChallengeUpdateInput {
+  title: string;
+  description: string | null;
+  detail: string | null;
+  level: ChallengeLevel;
+}
+
 export interface ChallengeWithLevel {
   level?: string | null;
 }
@@ -21,4 +35,13 @@ export function groupChallengesByLevel<T extends ChallengeWithLevel>(items: read
     grouped[normalizeChallengeLevel(item.level)].push(item);
   }
   return grouped;
+}
+
+export function normalizeChallengeUpdateInput(input: EditableChallengeInput): NormalizedChallengeUpdateInput {
+  return {
+    title: input.title.trim(),
+    description: input.description?.trim() || null,
+    detail: input.detail?.trim() || null,
+    level: normalizeChallengeLevel(input.level),
+  };
 }

@@ -2,7 +2,7 @@
  * 관리자 — 챌린지 CRUD.
  *
  * POST: 새 챌린지 등록. order_index는 현재 최대값 + 1로 자동 부여.
- * PATCH: 기존 챌린지의 기본/고급 구분 변경.
+ * PATCH: 기존 챌린지의 제목/짧은 설명/상세 내용/기본·고급 구분 변경.
  */
 
 import { NextResponse } from "next/server";
@@ -10,25 +10,30 @@ import { z } from "zod";
 
 import { requireSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { normalizeChallengeLevel } from "@/lib/challenges";
+import { normalizeChallengeLevel, normalizeChallengeUpdateInput } from "@/lib/challenges";
 
 const CreateBody = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(500).nullable().optional(),
+  detail: z.string().max(5000).nullable().optional(),
   level: z.enum(["basic", "advanced"]).optional(),
 });
 
-const UpdateLevelBody = z.object({
+const UpdateChallengeBody = z.object({
   id: z.string().uuid(),
-  level: z.enum(["basic", "advanced"]),
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(500).nullable().optional(),
+  detail: z.string().max(5000).nullable().optional(),
+  level: z.enum(["basic", "advanced"]).optional(),
 });
 
 function schemaUpdateRequiredResponse(message: string) {
   const isMissingLevel = message.includes("level") || message.includes("schema cache");
+  const isMissingDetail = message.includes("detail");
   return NextResponse.json(
     {
       ok: false,
-      error: isMissingLevel
+      error: isMissingLevel || isMissingDetail
         ? "Supabase SQL Editor에서 최신 supabase/schema.sql을 먼저 실행해주세요."
         : message,
     },
@@ -74,10 +79,11 @@ export async function POST(request: Request) {
     .insert({
       title: parsed.title,
       description: parsed.description ?? null,
+      detail: parsed.detail ?? null,
       order_index: nextOrder,
       level,
     })
-    .select("id, title, order_index, level")
+    .select("id, title, order_index, level, detail")
     .single();
   if (error || !data) {
     return schemaUpdateRequiredResponse(error?.message ?? "등록 실패");
@@ -89,20 +95,29 @@ export async function PATCH(request: Request) {
   const unauthorized = await requireAdminJson();
   if (unauthorized) return unauthorized;
 
-  let parsed: z.infer<typeof UpdateLevelBody>;
+  let parsed: z.infer<typeof UpdateChallengeBody>;
   try {
-    parsed = UpdateLevelBody.parse(await request.json());
+    parsed = UpdateChallengeBody.parse(await request.json());
   } catch {
-    return NextResponse.json({ ok: false, error: "챌린지와 구분값을 확인해주세요." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "챌린지 수정값을 확인해주세요." }, { status: 400 });
   }
 
   const client = getSupabaseServiceClient();
-  const level = normalizeChallengeLevel(parsed.level);
+  const update =
+    parsed.title !== undefined
+      ? normalizeChallengeUpdateInput({
+          title: parsed.title,
+          description: parsed.description,
+          detail: parsed.detail,
+          level: parsed.level,
+        })
+      : { level: normalizeChallengeLevel(parsed.level) };
+
   const { data, error } = await client
     .from("challenges")
-    .update({ level })
+    .update(update)
     .eq("id", parsed.id)
-    .select("id, title, level")
+    .select("id, title, description, detail, level")
     .maybeSingle();
 
   if (error) return schemaUpdateRequiredResponse(error.message);

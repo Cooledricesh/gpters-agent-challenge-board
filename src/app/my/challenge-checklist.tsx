@@ -10,6 +10,7 @@ interface ChallengeItem {
   id: string;
   title: string;
   description: string | null;
+  detail: string | null;
   level: ChallengeLevel;
   completedCount: number;
   totalStudents: number;
@@ -19,6 +20,7 @@ interface ChallengeItem {
 export default function ChallengeChecklist({ initial }: { initial: ChallengeItem[] }) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
+  const [selected, setSelected] = useState<ChallengeItem | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -38,6 +40,15 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
         };
       }),
     );
+    setSelected((prev) => {
+      if (!prev || prev.id !== id || prev.done === nextDone) return prev;
+      const delta = nextDone ? 1 : -1;
+      return {
+        ...prev,
+        done: nextDone,
+        completedCount: Math.max(0, Math.min(prev.totalStudents, prev.completedCount + delta)),
+      };
+    });
     startTransition(async () => {
       try {
         const res = await fetch("/api/my/completions", {
@@ -59,6 +70,15 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
               };
             }),
           );
+          setSelected((prev) => {
+            if (!prev || prev.id !== id || prev.done !== nextDone) return prev;
+            const delta = nextDone ? -1 : 1;
+            return {
+              ...prev,
+              done: !nextDone,
+              completedCount: Math.max(0, Math.min(prev.totalStudents, prev.completedCount + delta)),
+            };
+          });
           setError(json.error ?? "토글 실패");
         } else {
           router.refresh();
@@ -75,6 +95,15 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
             };
           }),
         );
+        setSelected((prev) => {
+          if (!prev || prev.id !== id || prev.done !== nextDone) return prev;
+          const delta = nextDone ? -1 : 1;
+          return {
+            ...prev,
+            done: !nextDone,
+            completedCount: Math.max(0, Math.min(prev.totalStudents, prev.completedCount + delta)),
+          };
+        });
         setError(err instanceof Error ? err.message : "네트워크 오류");
       } finally {
         setPendingId(null);
@@ -97,6 +126,7 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
         items={grouped.basic}
         pendingId={pendingId}
         onToggle={toggle}
+        onSelect={setSelected}
       />
       <ChallengeSection
         title={challengeLevelLabel("advanced")}
@@ -104,7 +134,16 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
         items={grouped.advanced}
         pendingId={pendingId}
         onToggle={toggle}
+        onSelect={setSelected}
       />
+      {selected && (
+        <ChallengeDetailModal
+          item={selected}
+          pending={pendingId === selected.id}
+          onClose={() => setSelected(null)}
+          onToggle={(nextDone) => toggle(selected.id, nextDone)}
+        />
+      )}
     </div>
   );
 }
@@ -115,12 +154,14 @@ function ChallengeSection({
   items,
   pendingId,
   onToggle,
+  onSelect,
 }: {
   title: string;
   subtitle: string;
   items: ChallengeItem[];
   pendingId: string | null;
   onToggle: (id: string, nextDone: boolean) => void;
+  onSelect: (item: ChallengeItem) => void;
 }) {
   if (items.length === 0) return null;
 
@@ -141,7 +182,7 @@ function ChallengeSection({
           return (
             <li
               key={it.id}
-              className="flex items-start gap-3 rounded border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
+              className="flex items-start gap-3 rounded border border-zinc-200 bg-white p-3 transition hover:border-indigo-200 hover:bg-indigo-50/40 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-indigo-900 dark:hover:bg-indigo-950/20"
             >
               <input
                 type="checkbox"
@@ -149,24 +190,102 @@ function ChallengeSection({
                 disabled={isPending}
                 onChange={(e) => onToggle(it.id, e.target.checked)}
                 className="mt-1 size-5 accent-indigo-600"
+                aria-label={`${it.title} 완료 여부`}
               />
-              <div className="flex-1">
+              <button
+                type="button"
+                onClick={() => onSelect(it)}
+                className="flex-1 text-left"
+                aria-label={`${it.title} 상세 내용 보기`}
+              >
                 <div className={`text-sm font-medium ${it.done ? "text-zinc-400 line-through" : ""}`}>
                   {it.title}
                 </div>
                 {it.description && (
-                  <p className="mt-0.5 text-xs text-zinc-500 whitespace-pre-line">
+                  <p className="mt-0.5 whitespace-pre-line text-xs text-zinc-500">
                     {it.description}
                   </p>
                 )}
                 <p className="mt-2 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">
                   {insight}
                 </p>
-              </div>
+                <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-300">클릭해서 상세 보기</p>
+              </button>
             </li>
           );
         })}
       </ul>
     </section>
+  );
+}
+
+function ChallengeDetailModal({
+  item,
+  pending,
+  onClose,
+  onToggle,
+}: {
+  item: ChallengeItem;
+  pending: boolean;
+  onClose: () => void;
+  onToggle: (nextDone: boolean) => void;
+}) {
+  const detail = item.detail?.trim() || item.description?.trim() || "아직 상세 내용이 등록되지 않았어요.";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="challenge-detail-title"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-950"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-zinc-100 p-4 dark:border-zinc-800">
+          <div>
+            <p className="text-xs font-medium text-indigo-600 dark:text-indigo-300">
+              {challengeLevelLabel(item.level)}
+            </p>
+            <h3 id="challenge-detail-title" className="mt-1 text-lg font-semibold">
+              {item.title}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full px-2 py-1 text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            aria-label="상세 모달 닫기"
+          >
+            닫기
+          </button>
+        </div>
+        <div className="max-h-[55vh] overflow-y-auto p-4">
+          <p className="whitespace-pre-line text-sm leading-6 text-zinc-700 dark:text-zinc-200">{detail}</p>
+          <p className="mt-4 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">
+            {item.completedCount}/{item.totalStudents}명 완료
+          </p>
+        </div>
+        <div className="flex gap-2 border-t border-zinc-100 p-4 dark:border-zinc-800">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => onToggle(!item.done)}
+            className="flex-1 rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {item.done ? "완료 해제" : "완료 체크"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

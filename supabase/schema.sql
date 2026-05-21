@@ -39,6 +39,7 @@ create table if not exists public.challenges (
   id          uuid primary key default gen_random_uuid(),
   title       text not null,
   description text,
+  detail      text,
   -- basic=기본 과제, advanced=고급 과제.
   level       text not null default 'basic' check (level in ('basic', 'advanced')),
   -- 표시 순서. 관리자 등록 순으로 자동 증가시키되 수동 정렬도 허용.
@@ -50,6 +51,11 @@ create table if not exists public.challenges (
 -- 기존 테이블에 level 컬럼이 없는 경우 추가한다. 기존 챌린지는 기본 과제로 둔다.
 alter table public.challenges
   add column if not exists level text not null default 'basic';
+
+-- 참여자가 챌린지 항목을 클릭했을 때 모달에 보여줄 긴 상세 안내.
+-- description은 보드에 짧게 보이는 요약, detail은 수행 방법/완료 기준/예시 등 긴 내용을 담는다.
+alter table public.challenges
+  add column if not exists detail text;
 
 update public.challenges
 set level = 'basic'

@@ -15,7 +15,7 @@ import { loadChallengesOrdered, type ChallengeRowWithLevel } from "@/lib/load-ch
 import { formatWeightedScore } from "@/lib/progress";
 import AddChallengeForm from "./add-challenge-form";
 import AddStudentForm from "./add-student-form";
-import ChallengeLevelSelect from "./challenge-level-select";
+import EditChallengeForm from "./edit-challenge-form";
 import StudentActions from "./student-actions";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function AdminPage() {
     await Promise.all([
       loadAllStudentProgress(client),
       loadChallengesOrdered(client),
-      client.from("completions").select("challenge_id"),
+      client.from("completions").select("user_id, challenge_id"),
     ]);
 
   if (chErr || coErr) {
@@ -49,8 +49,16 @@ export default async function AdminPage() {
       : students.reduce((s, r) => s + r.weightedScore, 0) / totalStudents;
 
   const byChallenge = new Map<string, number>();
-  for (const row of (completions ?? []) as { challenge_id: string }[]) {
+  const challengeTitleById = new Map(challengeRows.map((challenge) => [challenge.id, challenge.title]));
+  const completedTitlesByStudent = new Map<string, string[]>();
+  for (const row of (completions ?? []) as { user_id: string; challenge_id: string }[]) {
     byChallenge.set(row.challenge_id, (byChallenge.get(row.challenge_id) ?? 0) + 1);
+    const title = challengeTitleById.get(row.challenge_id);
+    if (title) {
+      const titles = completedTitlesByStudent.get(row.user_id) ?? [];
+      titles.push(title);
+      completedTitlesByStudent.set(row.user_id, titles);
+    }
   }
   const groupedChallenges = groupChallengesByLevel(challengeRows);
 
@@ -82,34 +90,54 @@ export default async function AdminPage() {
                   <th className="px-3 py-2">익명 라벨</th>
                   <th className="px-3 py-2">닉네임</th>
                   <th className="px-3 py-2">완료</th>
+                  <th className="px-3 py-2">달성 챌린지</th>
                   <th className="px-3 py-2">가중 점수</th>
                   <th className="px-3 py-2">관리</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {adminView.map((s) => (
-                  <tr key={s.id}>
-                    <td className="px-3 py-2 font-mono text-xs text-zinc-500">{s.anonymousLabel}</td>
-                    <td className="px-3 py-2 font-medium">{s.nickname}</td>
-                    <td className="px-3 py-2 tabular-nums text-zinc-600 dark:text-zinc-300">
-                      {s.completedCount}/{s.totalChallenges}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-16 text-right tabular-nums">{formatWeightedScore(s.weightedScore)}</span>
-                        <div className="h-1.5 w-32 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                          <div
-                            className="h-full bg-indigo-500"
-                            style={{ width: `${Math.max(0, Math.min(100, s.progressPercent))}%` }}
-                          />
+                {adminView.map((s) => {
+                  const completedTitles = completedTitlesByStudent.get(s.id) ?? [];
+                  return (
+                    <tr key={s.id}>
+                      <td className="px-3 py-2 font-mono text-xs text-zinc-500">{s.anonymousLabel}</td>
+                      <td className="px-3 py-2 font-medium">{s.nickname}</td>
+                      <td className="px-3 py-2 tabular-nums text-zinc-600 dark:text-zinc-300">
+                        {s.completedCount}/{s.totalChallenges}
+                      </td>
+                      <td className="max-w-xs px-3 py-2">
+                        {completedTitles.length === 0 ? (
+                          <span className="text-xs text-zinc-400">아직 없음</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {completedTitles.map((title) => (
+                              <span
+                                key={`${s.id}-${title}`}
+                                className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+                              >
+                                {title}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-16 text-right tabular-nums">{formatWeightedScore(s.weightedScore)}</span>
+                          <div className="h-1.5 w-32 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                            <div
+                              className="h-full bg-indigo-500"
+                              style={{ width: `${Math.max(0, Math.min(100, s.progressPercent))}%` }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <StudentActions id={s.id} nickname={s.nickname} />
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-3 py-2">
+                        <StudentActions id={s.id} nickname={s.nickname} />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -189,7 +217,13 @@ function AdminChallengeSection({
                   <span className="pt-1 text-zinc-500 tabular-nums">
                     {completed}/{totalStudents}
                   </span>
-                  <ChallengeLevelSelect id={c.id} initialLevel={c.level} />
+                  <EditChallengeForm
+                    id={c.id}
+                    initialTitle={c.title}
+                    initialDescription={c.description}
+                    initialDetail={c.detail}
+                    initialLevel={c.level}
+                  />
                 </div>
               </div>
             </li>

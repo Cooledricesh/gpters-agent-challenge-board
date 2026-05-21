@@ -6,6 +6,7 @@ export interface ChallengeRowWithLevel {
   id: string;
   title: string;
   description: string | null;
+  detail: string | null;
   order_index: number;
   level: ChallengeLevel;
 }
@@ -14,6 +15,7 @@ interface RawChallengeRow {
   id: string;
   title: string;
   description: string | null;
+  detail?: string | null;
   order_index: number;
   level?: string | null;
 }
@@ -23,6 +25,7 @@ function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
     id: row.id,
     title: row.title,
     description: row.description,
+    detail: row.detail ?? null,
     order_index: row.order_index,
     level: normalizeChallengeLevel(row.level),
   };
@@ -30,28 +33,46 @@ function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
 
 function shouldFallbackToLegacyChallengeShape(error: { message?: string; code?: string }): boolean {
   const message = error.message ?? "";
-  return message.includes("level") || message.includes("schema cache");
+  return message.includes("level") || message.includes("detail") || message.includes("schema cache");
 }
 
 export async function loadChallengesOrdered(
   client: SupabaseClient,
 ): Promise<{ data: ChallengeRowWithLevel[]; error: Error | null; usedLegacyFallback: boolean }> {
-  const withLevel = await client
+  const withDetail = await client
     .from("challenges")
-    .select("id, title, description, order_index, level")
+    .select("id, title, description, detail, order_index, level")
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (!withLevel.error) {
+  if (!withDetail.error) {
     return {
-      data: ((withLevel.data ?? []) as RawChallengeRow[]).map(mapChallenge),
+      data: ((withDetail.data ?? []) as RawChallengeRow[]).map(mapChallenge),
       error: null,
       usedLegacyFallback: false,
     };
   }
 
-  if (!shouldFallbackToLegacyChallengeShape(withLevel.error)) {
-    return { data: [], error: withLevel.error, usedLegacyFallback: false };
+  if (!shouldFallbackToLegacyChallengeShape(withDetail.error)) {
+    return { data: [], error: withDetail.error, usedLegacyFallback: false };
+  }
+
+  const withoutDetail = await client
+    .from("challenges")
+    .select("id, title, description, order_index, level")
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (!withoutDetail.error) {
+    return {
+      data: ((withoutDetail.data ?? []) as RawChallengeRow[]).map(mapChallenge),
+      error: null,
+      usedLegacyFallback: true,
+    };
+  }
+
+  if (!shouldFallbackToLegacyChallengeShape(withoutDetail.error)) {
+    return { data: [], error: withoutDetail.error, usedLegacyFallback: true };
   }
 
   const legacy = await client

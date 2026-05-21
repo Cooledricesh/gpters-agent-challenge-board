@@ -99,6 +99,7 @@ export default async function MyPage() {
               id: c.id,
               title: c.title,
               description: c.description,
+              detail: c.detail,
               level: c.level,
               completedCount: completedByChallenge.get(c.id) ?? 0,
               totalStudents,
