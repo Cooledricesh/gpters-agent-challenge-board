@@ -228,21 +228,23 @@ function AdminChallengeSection({
                 return (
                   <li
                     key={c.id}
-                    className="rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
+                    className="overflow-hidden rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
                   >
-                    <div className="flex justify-between gap-3">
-                      <div>
-                        <span className="font-medium">{c.title}</span>
-                        <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500 dark:bg-zinc-800">
-                          {challengeAreaLabel(c.area ?? section.key)}
-                        </span>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="min-w-0 break-words font-medium [overflow-wrap:anywhere]">{c.title}</span>
+                          <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500 dark:bg-zinc-800">
+                            {challengeAreaLabel(c.area ?? section.key)}
+                          </span>
+                        </div>
                         {c.description && (
-                          <p className="mt-0.5 whitespace-pre-line text-xs text-zinc-500">
+                          <p className="mt-0.5 whitespace-pre-line break-words text-xs text-zinc-500 [overflow-wrap:anywhere]">
                             {c.description}
                           </p>
                         )}
                       </div>
-                      <div className="flex shrink-0 items-start gap-3">
+                      <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:items-start sm:justify-end">
                         <span className="pt-1 text-zinc-500 tabular-nums">
                           {completed}/{totalStudents}
                         </span>
