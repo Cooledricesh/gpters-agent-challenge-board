@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { groupChallengesByLevel, normalizeChallengeLevel, normalizeChallengeUpdateInput } from "./challenges";
+import {
+  getChallengeArea,
+  groupChallengesByArea,
+  groupChallengesByLevel,
+  normalizeChallengeLevel,
+  normalizeChallengeUpdateInput,
+} from "./challenges";
 
 describe("challenge level helpers", () => {
   it("normalizes unknown or missing levels to basic", () => {
@@ -20,6 +26,35 @@ describe("challenge level helpers", () => {
 
     expect(grouped.basic.map((item) => item.id)).toEqual(["1", "3"]);
     expect(grouped.advanced.map((item) => item.id)).toEqual(["2", "4"]);
+  });
+
+  it("classifies challenges into intuitive areas by level and title", () => {
+    expect(getChallengeArea({ title: "오픈클로 or 헤르메스 설치", level: "basic" })).toBe("start");
+    expect(getChallengeArea({ title: "구글 캘린더 연결하기", level: "basic" })).toBe("channel");
+    expect(getChallengeArea({ title: "매일 아침 날씨 브리핑 받기", level: "basic" })).toBe("automation");
+    expect(getChallengeArea({ title: "유튜브 링크 주고 내용 요약시키기", level: "basic" })).toBe("content");
+    expect(getChallengeArea({ title: "검문소", level: "basic" })).toBe("operations");
+
+    expect(getChallengeArea({ title: "옵시디언에 연결하기", level: "advanced" })).toBe("integrations");
+    expect(getChallengeArea({ title: "봇투봇 커뮤니케이션", level: "advanced" })).toBe("orchestration");
+    expect(getChallengeArea({ title: "LLM-wiki 체계 만들기", level: "advanced" })).toBe("build");
+    expect(getChallengeArea({ title: "TTS 설정해서 목소리 만들어주기", level: "advanced" })).toBe("voice-ui");
+    expect(getChallengeArea({ title: "자동 결제", level: "advanced" })).toBe("edge");
+  });
+
+  it("groups challenges by area while preserving order inside each area", () => {
+    const sections = groupChallengesByArea("basic", [
+      { id: "1", title: "유튜브 링크 주고 내용 요약시키기", level: "basic" },
+      { id: "2", title: "오픈클로 or 헤르메스 설치", level: "basic" },
+      { id: "3", title: "이미지 생성 시켜보기", level: "basic" },
+      { id: "4", title: "검문소", level: "basic" },
+    ]);
+
+    expect(sections.map((section) => section.key)).toEqual(["start", "content", "operations"]);
+    expect(sections.find((section) => section.key === "content")?.items.map((item) => item.id)).toEqual([
+      "1",
+      "3",
+    ]);
   });
 
   it("normalizes editable challenge fields for update requests", () => {

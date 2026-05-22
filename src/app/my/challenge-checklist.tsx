@@ -3,7 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { challengeLevelLabel, groupChallengesByLevel, type ChallengeLevel } from "@/lib/challenges";
+import {
+  challengeLevelLabel,
+  groupChallengesByArea,
+  groupChallengesByLevel,
+  type ChallengeLevel,
+} from "@/lib/challenges";
 import { challengeCompletionInsight } from "@/lib/challenge-insights";
 
 interface ChallengeItem {
@@ -165,56 +170,73 @@ function ChallengeSection({
 }) {
   if (items.length === 0) return null;
 
+  const areaSections = groupChallengesByArea(items[0]?.level ?? "basic", items);
+
   return (
-    <section className="flex flex-col gap-2">
-      <div>
-        <h3 className="text-base font-semibold">{title}</h3>
-        <p className="text-xs text-zinc-500">{subtitle}</p>
+    <section className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white/70 p-3 dark:border-zinc-800 dark:bg-zinc-950/30">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold">{title}</h3>
+          <p className="text-xs text-zinc-500">{subtitle}</p>
+        </div>
+        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800">
+          {items.length}개
+        </span>
       </div>
-      <ul className="flex flex-col gap-2">
-        {items.map((it) => {
-          const isPending = pendingId === it.id;
-          const insight = challengeCompletionInsight({
-            completedCount: it.completedCount,
-            totalStudents: it.totalStudents,
-            done: it.done,
-          });
-          return (
-            <li
-              key={it.id}
-              className="flex items-start gap-3 rounded border border-zinc-200 bg-white p-3 transition hover:border-indigo-200 hover:bg-indigo-50/40 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-indigo-900 dark:hover:bg-indigo-950/20"
-            >
-              <input
-                type="checkbox"
-                checked={it.done}
-                disabled={isPending}
-                onChange={(e) => onToggle(it.id, e.target.checked)}
-                className="mt-1 size-5 accent-indigo-600"
-                aria-label={`${it.title} 완료 여부`}
-              />
-              <button
-                type="button"
-                onClick={() => onSelect(it)}
-                className="flex-1 text-left"
-                aria-label={`${it.title} 상세 내용 보기`}
-              >
-                <div className={`text-sm font-medium ${it.done ? "text-zinc-400 line-through" : ""}`}>
-                  {it.title}
-                </div>
-                {it.description && (
-                  <p className="mt-0.5 whitespace-pre-line text-xs text-zinc-500">
-                    {it.description}
-                  </p>
-                )}
-                <p className="mt-2 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">
-                  {insight}
-                </p>
-                <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-300">클릭해서 상세 보기</p>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="space-y-3">
+        {areaSections.map((section) => (
+          <div key={section.key}>
+            <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 border-l-2 border-indigo-300 pl-2 dark:border-indigo-700">
+              <h4 className="text-sm font-semibold">{section.label}</h4>
+              <p className="text-xs text-zinc-500">{section.description}</p>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {section.items.map((it) => {
+                const isPending = pendingId === it.id;
+                const insight = challengeCompletionInsight({
+                  completedCount: it.completedCount,
+                  totalStudents: it.totalStudents,
+                  done: it.done,
+                });
+                return (
+                  <li
+                    key={it.id}
+                    className="flex items-start gap-3 rounded-lg border border-zinc-200 bg-white p-3 transition hover:border-indigo-200 hover:bg-indigo-50/40 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-indigo-900 dark:hover:bg-indigo-950/20"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={it.done}
+                      disabled={isPending}
+                      onChange={(e) => onToggle(it.id, e.target.checked)}
+                      className="mt-1 size-5 accent-indigo-600"
+                      aria-label={`${it.title} 완료 여부`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onSelect(it)}
+                      className="flex-1 text-left"
+                      aria-label={`${it.title} 상세 내용 보기`}
+                    >
+                      <div className={`text-sm font-medium ${it.done ? "text-zinc-400 line-through" : ""}`}>
+                        {it.title}
+                      </div>
+                      {it.description && (
+                        <p className="mt-0.5 whitespace-pre-line text-xs text-zinc-500">
+                          {it.description}
+                        </p>
+                      )}
+                      <p className="mt-2 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">
+                        {insight}
+                      </p>
+                      <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-300">클릭해서 상세 보기</p>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

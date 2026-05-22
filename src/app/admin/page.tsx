@@ -10,7 +10,12 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { loadAllStudentProgress, toAdminView } from "@/lib/stats";
-import { challengeLevelLabel, groupChallengesByLevel, type ChallengeLevel } from "@/lib/challenges";
+import {
+  challengeLevelLabel,
+  groupChallengesByArea,
+  groupChallengesByLevel,
+  type ChallengeLevel,
+} from "@/lib/challenges";
 import { loadChallengesOrdered, type ChallengeRowWithLevel } from "@/lib/load-challenges";
 import { formatWeightedScore } from "@/lib/progress";
 import AddChallengeForm from "./add-challenge-form";
@@ -193,43 +198,66 @@ function AdminChallengeSection({
 }) {
   if (challenges.length === 0) return null;
 
+  const areaSections = groupChallengesByArea(level, challenges);
+
   return (
     <section>
-      <h3 className="mb-2 text-base font-semibold">{challengeLevelLabel(level)}</h3>
-      <ul className="space-y-2">
-        {challenges.map((c) => {
-          const completed = byChallenge.get(c.id) ?? 0;
-          return (
-            <li
-              key={c.id}
-              className="rounded border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
-            >
-              <div className="flex justify-between gap-3">
-                <div>
-                  <span className="font-medium">{c.title}</span>
-                  {c.description && (
-                    <p className="mt-0.5 text-xs text-zinc-500 whitespace-pre-line">
-                      {c.description}
-                    </p>
-                  )}
-                </div>
-                <div className="flex shrink-0 items-start gap-3">
-                  <span className="pt-1 text-zinc-500 tabular-nums">
-                    {completed}/{totalStudents}
-                  </span>
-                  <EditChallengeForm
-                    id={c.id}
-                    initialTitle={c.title}
-                    initialDescription={c.description}
-                    initialDetail={c.detail}
-                    initialLevel={c.level}
-                  />
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold">{challengeLevelLabel(level)}</h3>
+          <p className="text-xs text-zinc-500">영역별로 묶어서 완료 현황을 빠르게 확인합니다.</p>
+        </div>
+        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800">
+          {challenges.length}개
+        </span>
+      </div>
+      <div className="space-y-3">
+        {areaSections.map((section) => (
+          <div
+            key={section.key}
+            className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 dark:border-zinc-800 dark:bg-zinc-950/40"
+          >
+            <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <h4 className="text-sm font-semibold">{section.label}</h4>
+              <p className="text-xs text-zinc-500">{section.description}</p>
+            </div>
+            <ul className="space-y-2">
+              {section.items.map((c) => {
+                const completed = byChallenge.get(c.id) ?? 0;
+                return (
+                  <li
+                    key={c.id}
+                    className="rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
+                  >
+                    <div className="flex justify-between gap-3">
+                      <div>
+                        <span className="font-medium">{c.title}</span>
+                        {c.description && (
+                          <p className="mt-0.5 whitespace-pre-line text-xs text-zinc-500">
+                            {c.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-start gap-3">
+                        <span className="pt-1 text-zinc-500 tabular-nums">
+                          {completed}/{totalStudents}
+                        </span>
+                        <EditChallengeForm
+                          id={c.id}
+                          initialTitle={c.title}
+                          initialDescription={c.description}
+                          initialDetail={c.detail}
+                          initialLevel={c.level}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
