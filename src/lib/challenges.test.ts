@@ -38,6 +38,7 @@ describe("challenge level helpers", () => {
     expect(getChallengeArea({ title: "옵시디언에 연결하기", level: "advanced" })).toBe("integrations");
     expect(getChallengeArea({ title: "봇투봇 커뮤니케이션", level: "advanced" })).toBe("orchestration");
     expect(getChallengeArea({ title: "LLM-wiki 체계 만들기", level: "advanced" })).toBe("build");
+    expect(getChallengeArea({ title: "프레젠테이션 작성 시켜보기", level: "advanced" })).toBe("build");
     expect(getChallengeArea({ title: "TTS 설정해서 목소리 만들어주기", level: "advanced" })).toBe("voice-ui");
     expect(getChallengeArea({ title: "자동 결제", level: "advanced" })).toBe("edge");
   });

@@ -149,7 +149,10 @@ export function getChallengeArea(item: ChallengeWithTitle): ChallengeAreaKey {
     title.includes("llm-wiki") ||
     title.includes("모델") ||
     title.includes("검은소") ||
-    title.includes("누렁소")
+    title.includes("누렁소") ||
+    title.includes("프레젠테이션") ||
+    title.includes("ppt") ||
+    title.includes("발표자료")
   ) {
     return "build";
   }
