@@ -7,6 +7,7 @@ import {
   challengeLevelLabel,
   groupChallengesByArea,
   groupChallengesByLevel,
+  type ChallengeAreaKey,
   type ChallengeLevel,
 } from "@/lib/challenges";
 import { challengeCompletionInsight } from "@/lib/challenge-insights";
@@ -17,6 +18,7 @@ interface ChallengeItem {
   description: string | null;
   detail: string | null;
   level: ChallengeLevel;
+  area: ChallengeAreaKey | null;
   completedCount: number;
   totalStudents: number;
   done: boolean;

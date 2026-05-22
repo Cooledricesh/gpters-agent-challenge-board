@@ -11,6 +11,7 @@ import { requireSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { loadAllStudentProgress, toAdminView } from "@/lib/stats";
 import {
+  challengeAreaLabel,
   challengeLevelLabel,
   groupChallengesByArea,
   groupChallengesByLevel,
@@ -232,6 +233,9 @@ function AdminChallengeSection({
                     <div className="flex justify-between gap-3">
                       <div>
                         <span className="font-medium">{c.title}</span>
+                        <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500 dark:bg-zinc-800">
+                          {challengeAreaLabel(c.area ?? section.key)}
+                        </span>
                         {c.description && (
                           <p className="mt-0.5 whitespace-pre-line text-xs text-zinc-500">
                             {c.description}
@@ -248,6 +252,7 @@ function AdminChallengeSection({
                           initialDescription={c.description}
                           initialDetail={c.detail}
                           initialLevel={c.level}
+                          initialArea={c.area}
                         />
                       </div>
                     </div>

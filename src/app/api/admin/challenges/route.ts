@@ -10,13 +10,33 @@ import { z } from "zod";
 
 import { requireSession } from "@/lib/session";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { normalizeChallengeLevel, normalizeChallengeUpdateInput } from "@/lib/challenges";
+import {
+  normalizeChallengeArea,
+  normalizeChallengeLevel,
+  normalizeChallengeUpdateInput,
+  type ChallengeAreaKey,
+} from "@/lib/challenges";
+
+const ChallengeAreaSchema = z.enum([
+  "start",
+  "channel",
+  "automation",
+  "content",
+  "operations",
+  "integrations",
+  "orchestration",
+  "build",
+  "voice-ui",
+  "edge",
+  "other",
+] satisfies [ChallengeAreaKey, ...ChallengeAreaKey[]]);
 
 const CreateBody = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(500).nullable().optional(),
   detail: z.string().max(5000).nullable().optional(),
   level: z.enum(["basic", "advanced"]).optional(),
+  area: ChallengeAreaSchema.nullable().optional(),
 });
 
 const UpdateChallengeBody = z.object({
@@ -25,15 +45,17 @@ const UpdateChallengeBody = z.object({
   description: z.string().max(500).nullable().optional(),
   detail: z.string().max(5000).nullable().optional(),
   level: z.enum(["basic", "advanced"]).optional(),
+  area: ChallengeAreaSchema.nullable().optional(),
 });
 
 function schemaUpdateRequiredResponse(message: string) {
   const isMissingLevel = message.includes("level") || message.includes("schema cache");
   const isMissingDetail = message.includes("detail");
+  const isMissingArea = message.includes("area");
   return NextResponse.json(
     {
       ok: false,
-      error: isMissingLevel || isMissingDetail
+      error: isMissingLevel || isMissingDetail || isMissingArea
         ? "Supabase SQL Editor에서 최신 supabase/schema.sql을 먼저 실행해주세요."
         : message,
     },
@@ -74,6 +96,7 @@ export async function POST(request: Request) {
   const nextOrder = (maxRow?.order_index ?? 0) + 1;
 
   const level = normalizeChallengeLevel(parsed.level);
+  const area = normalizeChallengeArea(parsed.area);
   const { data, error } = await client
     .from("challenges")
     .insert({
@@ -82,8 +105,9 @@ export async function POST(request: Request) {
       detail: parsed.detail ?? null,
       order_index: nextOrder,
       level,
+      area,
     })
-    .select("id, title, order_index, level, detail")
+    .select("id, title, order_index, level, detail, area")
     .single();
   if (error || !data) {
     return schemaUpdateRequiredResponse(error?.message ?? "등록 실패");
@@ -110,14 +134,18 @@ export async function PATCH(request: Request) {
           description: parsed.description,
           detail: parsed.detail,
           level: parsed.level,
+          area: parsed.area,
         })
-      : { level: normalizeChallengeLevel(parsed.level) };
+      : {
+          ...(parsed.level !== undefined ? { level: normalizeChallengeLevel(parsed.level) } : {}),
+          ...(parsed.area !== undefined ? { area: normalizeChallengeArea(parsed.area) } : {}),
+        };
 
   const { data, error } = await client
     .from("challenges")
     .update(update)
     .eq("id", parsed.id)
-    .select("id, title, description, detail, level")
+    .select("id, title, description, detail, level, area")
     .maybeSingle();
 
   if (error) return schemaUpdateRequiredResponse(error.message);

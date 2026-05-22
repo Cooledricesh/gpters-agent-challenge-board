@@ -4,6 +4,7 @@ import {
   getChallengeArea,
   groupChallengesByArea,
   groupChallengesByLevel,
+  normalizeChallengeArea,
   normalizeChallengeLevel,
   normalizeChallengeUpdateInput,
 } from "./challenges";
@@ -43,6 +44,19 @@ describe("challenge level helpers", () => {
     expect(getChallengeArea({ title: "자동 결제", level: "advanced" })).toBe("edge");
   });
 
+  it("uses a stored challenge area before falling back to title classification", () => {
+    expect(normalizeChallengeArea("build")).toBe("build");
+    expect(normalizeChallengeArea("unknown")).toBeNull();
+    expect(normalizeChallengeArea(null)).toBeNull();
+
+    expect(getChallengeArea({ title: "TTS 설정해서 목소리 만들어주기", level: "advanced", area: "build" })).toBe(
+      "build",
+    );
+    expect(getChallengeArea({ title: "TTS 설정해서 목소리 만들어주기", level: "advanced", area: null })).toBe(
+      "voice-ui",
+    );
+  });
+
   it("groups challenges by area while preserving order inside each area", () => {
     const sections = groupChallengesByArea("basic", [
       { id: "1", title: "유튜브 링크 주고 내용 요약시키기", level: "basic" },
@@ -65,12 +79,14 @@ describe("challenge level helpers", () => {
         description: "  보드용 요약  ",
         detail: "  수행 방법\n완료 기준  ",
         level: "advanced",
+        area: "build",
       }),
     ).toEqual({
       title: "긴 프롬프트 실습",
       description: "보드용 요약",
       detail: "수행 방법\n완료 기준",
       level: "advanced",
+      area: "build",
     });
 
     expect(
@@ -79,12 +95,14 @@ describe("challenge level helpers", () => {
         description: "   ",
         detail: "",
         level: "unknown",
+        area: "unknown",
       }),
     ).toEqual({
       title: "제목만 수정",
       description: null,
       detail: null,
       level: "basic",
+      area: null,
     });
   });
 });

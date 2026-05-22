@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import type { ChallengeLevel } from "@/lib/challenges";
+import { CHALLENGE_AREA_OPTIONS, type ChallengeAreaKey, type ChallengeLevel } from "@/lib/challenges";
 
 export default function AddChallengeForm() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function AddChallengeForm() {
   const [description, setDescription] = useState("");
   const [detail, setDetail] = useState("");
   const [level, setLevel] = useState<ChallengeLevel>("basic");
+  const [area, setArea] = useState<ChallengeAreaKey | "">("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -29,6 +30,7 @@ export default function AddChallengeForm() {
             description: description.trim() || null,
             detail: detail.trim() || null,
             level,
+            area: area || null,
           }),
         });
         const json = await res.json();
@@ -41,6 +43,7 @@ export default function AddChallengeForm() {
         setDescription("");
         setDetail("");
         setLevel("basic");
+        setArea("");
         router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "네트워크 오류");
@@ -66,6 +69,18 @@ export default function AddChallengeForm() {
       >
         <option value="basic">기본 과제</option>
         <option value="advanced">고급 과제</option>
+      </select>
+      <select
+        value={area}
+        onChange={(e) => setArea(e.target.value as ChallengeAreaKey | "")}
+        className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900"
+      >
+        <option value="">영역 자동 분류</option>
+        {CHALLENGE_AREA_OPTIONS.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.label}
+          </option>
+        ))}
       </select>
       <textarea
         rows={2}

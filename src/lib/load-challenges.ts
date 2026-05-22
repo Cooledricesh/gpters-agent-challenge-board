@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { normalizeChallengeLevel, type ChallengeLevel } from "./challenges";
+import { normalizeChallengeArea, normalizeChallengeLevel, type ChallengeAreaKey, type ChallengeLevel } from "./challenges";
 
 export interface ChallengeRowWithLevel {
   id: string;
@@ -9,6 +9,7 @@ export interface ChallengeRowWithLevel {
   detail: string | null;
   order_index: number;
   level: ChallengeLevel;
+  area: ChallengeAreaKey | null;
 }
 
 interface RawChallengeRow {
@@ -18,6 +19,7 @@ interface RawChallengeRow {
   detail?: string | null;
   order_index: number;
   level?: string | null;
+  area?: string | null;
 }
 
 function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
@@ -28,12 +30,13 @@ function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
     detail: row.detail ?? null,
     order_index: row.order_index,
     level: normalizeChallengeLevel(row.level),
+    area: normalizeChallengeArea(row.area),
   };
 }
 
 function shouldFallbackToLegacyChallengeShape(error: { message?: string; code?: string }): boolean {
   const message = error.message ?? "";
-  return message.includes("level") || message.includes("detail") || message.includes("schema cache");
+  return message.includes("level") || message.includes("detail") || message.includes("area") || message.includes("schema cache");
 }
 
 export async function loadChallengesOrdered(
@@ -41,7 +44,7 @@ export async function loadChallengesOrdered(
 ): Promise<{ data: ChallengeRowWithLevel[]; error: Error | null; usedLegacyFallback: boolean }> {
   const withDetail = await client
     .from("challenges")
-    .select("id, title, description, detail, order_index, level")
+    .select("id, title, description, detail, order_index, level, area")
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -59,7 +62,7 @@ export async function loadChallengesOrdered(
 
   const withoutDetail = await client
     .from("challenges")
-    .select("id, title, description, order_index, level")
+    .select("id, title, description, detail, order_index, level")
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: true });
 

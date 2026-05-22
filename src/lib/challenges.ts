@@ -5,6 +5,7 @@ export interface EditableChallengeInput {
   description?: string | null;
   detail?: string | null;
   level?: string | null;
+  area?: string | null;
 }
 
 export interface NormalizedChallengeUpdateInput {
@@ -12,6 +13,7 @@ export interface NormalizedChallengeUpdateInput {
   description: string | null;
   detail: string | null;
   level: ChallengeLevel;
+  area: ChallengeAreaKey | null;
 }
 
 export interface ChallengeWithLevel {
@@ -20,6 +22,7 @@ export interface ChallengeWithLevel {
 
 export interface ChallengeWithTitle extends ChallengeWithLevel {
   title: string;
+  area?: string | null;
 }
 
 export type ChallengeAreaKey =
@@ -45,23 +48,49 @@ export interface ChallengeAreaGroup<T> extends ChallengeAreaDefinition {
   items: T[];
 }
 
-const BASIC_AREA_DEFINITIONS: ChallengeAreaDefinition[] = [
+const CHALLENGE_AREA_KEYS = [
+  "start",
+  "channel",
+  "automation",
+  "content",
+  "operations",
+  "integrations",
+  "orchestration",
+  "build",
+  "voice-ui",
+  "edge",
+  "other",
+] as const satisfies readonly ChallengeAreaKey[];
+
+export const CHALLENGE_AREA_OPTIONS: ChallengeAreaDefinition[] = [
   { key: "start", label: "시작 준비", description: "설치, 대시보드, 기본 성격 설정" },
   { key: "channel", label: "연결하기", description: "텔레그램과 구글 계정 연결" },
   { key: "automation", label: "자동화 루틴", description: "정해진 시간에 알아서 보고받기" },
   { key: "content", label: "일상 작업 맡기기", description: "요약, 정리, 이미지 생성 같은 실전 요청" },
   { key: "operations", label: "점검·유지보수", description: "진단, 복구, 업데이트로 안정화" },
-  { key: "other", label: "기타", description: "아직 영역을 정하지 않은 기본 과제" },
-];
-
-const ADVANCED_AREA_DEFINITIONS: ChallengeAreaDefinition[] = [
   { key: "integrations", label: "외부 도구 연결", description: "노트, 메신저, CLI, 확장 기능 붙이기" },
   { key: "orchestration", label: "에이전트 협업", description: "봇끼리 대화하고 작업을 나눠보기" },
   { key: "build", label: "만들고 탐색하기", description: "대시보드, 지식체계, 모델 실험" },
   { key: "voice-ui", label: "음성·화면 자동화", description: "TTS와 GUI 자동화로 경험 확장" },
   { key: "edge", label: "주의해서 실험", description: "위험하거나 의도가 강한 실험" },
-  { key: "other", label: "기타", description: "아직 영역을 정하지 않은 고급 과제" },
+  { key: "other", label: "기타", description: "아직 영역을 정하지 않은 과제" },
 ];
+
+const BASIC_AREA_DEFINITIONS: ChallengeAreaDefinition[] = CHALLENGE_AREA_OPTIONS.filter((area) =>
+  ["start", "channel", "automation", "content", "operations", "other"].includes(area.key),
+);
+
+const ADVANCED_AREA_DEFINITIONS: ChallengeAreaDefinition[] = CHALLENGE_AREA_OPTIONS.filter((area) =>
+  ["integrations", "orchestration", "build", "voice-ui", "edge", "other"].includes(area.key),
+);
+
+export function normalizeChallengeArea(area: string | null | undefined): ChallengeAreaKey | null {
+  return CHALLENGE_AREA_KEYS.includes(area as ChallengeAreaKey) ? (area as ChallengeAreaKey) : null;
+}
+
+export function challengeAreaLabel(area: ChallengeAreaKey): string {
+  return CHALLENGE_AREA_OPTIONS.find((definition) => definition.key === area)?.label ?? "기타";
+}
 
 export function normalizeChallengeLevel(level: string | null | undefined): ChallengeLevel {
   return level === "advanced" ? "advanced" : "basic";
@@ -83,6 +112,9 @@ export function groupChallengesByLevel<T extends ChallengeWithLevel>(items: read
 }
 
 export function getChallengeArea(item: ChallengeWithTitle): ChallengeAreaKey {
+  const storedArea = normalizeChallengeArea(item.area);
+  if (storedArea) return storedArea;
+
   const title = item.title.toLowerCase().replace(/\s+/g, " ");
   const level = normalizeChallengeLevel(item.level);
 
@@ -192,5 +224,6 @@ export function normalizeChallengeUpdateInput(input: EditableChallengeInput): No
     description: input.description?.trim() || null,
     detail: input.detail?.trim() || null,
     level: normalizeChallengeLevel(input.level),
+    area: normalizeChallengeArea(input.area),
   };
 }

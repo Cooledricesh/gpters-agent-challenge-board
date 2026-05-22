@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import type { ChallengeLevel } from "@/lib/challenges";
+import { CHALLENGE_AREA_OPTIONS, type ChallengeAreaKey, type ChallengeLevel } from "@/lib/challenges";
 
 export default function EditChallengeForm({
   id,
@@ -11,12 +11,14 @@ export default function EditChallengeForm({
   initialDescription,
   initialDetail,
   initialLevel,
+  initialArea,
 }: {
   id: string;
   initialTitle: string;
   initialDescription: string | null;
   initialDetail: string | null;
   initialLevel: ChallengeLevel;
+  initialArea: ChallengeAreaKey | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -24,6 +26,7 @@ export default function EditChallengeForm({
   const [description, setDescription] = useState(initialDescription ?? "");
   const [detail, setDetail] = useState(initialDetail ?? "");
   const [level, setLevel] = useState<ChallengeLevel>(initialLevel);
+  const [area, setArea] = useState<ChallengeAreaKey | "">(initialArea ?? "");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -33,6 +36,7 @@ export default function EditChallengeForm({
     setDescription(initialDescription ?? "");
     setDetail(initialDetail ?? "");
     setLevel(initialLevel);
+    setArea(initialArea ?? "");
     setError(null);
     setInfo(null);
     setEditing(false);
@@ -53,6 +57,7 @@ export default function EditChallengeForm({
             description: description.trim() || null,
             detail: detail.trim() || null,
             level,
+            area: area || null,
           }),
         });
         const json = await res.json();
@@ -101,6 +106,18 @@ export default function EditChallengeForm({
       >
         <option value="basic">기본 과제</option>
         <option value="advanced">고급 과제</option>
+      </select>
+      <select
+        value={area}
+        onChange={(e) => setArea(e.target.value as ChallengeAreaKey | "")}
+        className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900"
+      >
+        <option value="">영역 자동 분류</option>
+        {CHALLENGE_AREA_OPTIONS.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.label}
+          </option>
+        ))}
       </select>
       <textarea
         rows={2}

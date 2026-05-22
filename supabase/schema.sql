@@ -42,6 +42,11 @@ create table if not exists public.challenges (
   detail      text,
   -- basic=기본 과제, advanced=고급 과제.
   level       text not null default 'basic' check (level in ('basic', 'advanced')),
+  -- 영역 그룹. null이면 앱이 제목 기반 자동 분류로 보조 처리한다.
+  area        text check (area in (
+                'start', 'channel', 'automation', 'content', 'operations',
+                'integrations', 'orchestration', 'build', 'voice-ui', 'edge', 'other'
+              )),
   -- 표시 순서. 관리자 등록 순으로 자동 증가시키되 수동 정렬도 허용.
   order_index integer not null default 0,
   created_at  timestamptz not null default now(),
@@ -57,9 +62,62 @@ alter table public.challenges
 alter table public.challenges
   add column if not exists detail text;
 
+-- 챌린지 영역 그룹. 운영 중에는 관리자 화면/DB에서 직접 지정하고, null이면 앱의 제목 기반 보조 분류를 사용한다.
+alter table public.challenges
+  add column if not exists area text;
+
 update public.challenges
 set level = 'basic'
 where level is null or level not in ('basic', 'advanced');
+
+update public.challenges
+set area = null
+where area is not null
+  and area not in (
+    'start', 'channel', 'automation', 'content', 'operations',
+    'integrations', 'orchestration', 'build', 'voice-ui', 'edge', 'other'
+  );
+
+-- 기존 행은 현재 앱의 제목 기반 보조 분류와 같은 기준으로 area를 한 번 채운다.
+-- 이후부터는 관리자 화면/DB에서 area를 직접 바꾸면 코드 수정 없이 반영된다.
+update public.challenges
+set area = case
+  when level = 'basic' and (
+    lower(title) like '%설치%' or lower(title) like '%soul%' or lower(title) like '%대시보드%'
+  ) then 'start'
+  when level = 'basic' and (
+    lower(title) like '%텔레그램%' or lower(title) like '%두번째%' or lower(title) like '%두 번째%' or
+    lower(title) like '%구글 이메일%' or lower(title) like '%캘린더%'
+  ) then 'channel'
+  when level = 'basic' and (
+    lower(title) like '%크론%' or lower(title) like '%날씨%' or lower(title) like '%일정 보고%'
+  ) then 'automation'
+  when level = 'basic' and (
+    lower(title) like '%폴더%' or lower(title) like '%유튜브%' or lower(title) like '%요약%' or lower(title) like '%이미지%'
+  ) then 'content'
+  when level = 'basic' and (
+    lower(title) like '%심폐소생술%' or lower(title) like '%검문소%' or lower(title) like '%유지 보수%' or lower(title) like '%업데이트%'
+  ) then 'operations'
+  when level = 'basic' then 'other'
+  when level = 'advanced' and (
+    lower(title) like '%k-skill%' or lower(title) like '%rtk%' or lower(title) like '%옵시디언%' or
+    lower(title) like '%슬랙%' or lower(title) like '%디스코드%' or lower(title) like '%카카오톡%' or lower(title) like '%클로드 cli%'
+  ) then 'integrations'
+  when level = 'advanced' and (
+    lower(title) like '%봇투봇%' or lower(title) like '%session_send%' or lower(title) like '%칸반%' or lower(title) like '%그룹톡%'
+  ) then 'orchestration'
+  when level = 'advanced' and (
+    lower(title) like '%대시보드%' or lower(title) like '%llm-wiki%' or lower(title) like '%모델%' or
+    lower(title) like '%검은소%' or lower(title) like '%누렁소%' or lower(title) like '%프레젠테이션%' or
+    lower(title) like '%ppt%' or lower(title) like '%발표자료%'
+  ) then 'build'
+  when level = 'advanced' and (
+    lower(title) like '%tts%' or lower(title) like '%목소리%' or lower(title) like '%gui%' or lower(title) like '%팟캐스트%'
+  ) then 'voice-ui'
+  when level = 'advanced' and lower(title) like '%자동 결제%' then 'edge'
+  else 'other'
+end
+where area is null;
 
 do $$
 begin
@@ -74,11 +132,30 @@ begin
   end if;
 end $$;
 
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'challenges_area_check'
+      and conrelid = 'public.challenges'::regclass
+  ) then
+    alter table public.challenges
+      add constraint challenges_area_check check (area in (
+        'start', 'channel', 'automation', 'content', 'operations',
+        'integrations', 'orchestration', 'build', 'voice-ui', 'edge', 'other'
+      ));
+  end if;
+end $$;
+
 create index if not exists challenges_order_idx
   on public.challenges (order_index, created_at);
 
 create index if not exists challenges_level_order_idx
   on public.challenges (level, order_index, created_at);
+
+create index if not exists challenges_area_order_idx
+  on public.challenges (level, area, order_index, created_at);
 
 -- =========================
 -- 3. completions
