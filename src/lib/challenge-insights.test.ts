@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { challengeCompletionInsight, countCompletionsByChallenge } from "./challenge-insights";
+import {
+  challengeCompletionInsight,
+  countCompletionsByChallenge,
+  sortChallengesByCompletionCount,
+} from "./challenge-insights";
 
 describe("challenge insights", () => {
   it("counts completions per challenge", () => {
@@ -31,5 +35,15 @@ describe("challenge insights", () => {
     expect(challengeCompletionInsight({ completedCount: 3, totalStudents: 31, done: false })).toBe(
       "3명이 완료했어요",
     );
+  });
+
+  it("sorts public challenge stats by completion count descending", () => {
+    expect(
+      sortChallengesByCompletionCount([
+        { title: "아무도 안 한 과제", completedCount: 0 },
+        { title: "많이 한 과제", completedCount: 12 },
+        { title: "조금 한 과제", completedCount: 3 },
+      ]).map((challenge) => challenge.title),
+    ).toEqual(["많이 한 과제", "조금 한 과제", "아무도 안 한 과제"]);
   });
 });

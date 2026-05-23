@@ -12,6 +12,16 @@ export function countCompletionsByChallenge(
   return counts;
 }
 
+export interface ChallengeCompletionSortable {
+  completedCount: number;
+}
+
+export function sortChallengesByCompletionCount<T extends ChallengeCompletionSortable>(
+  challenges: readonly T[],
+): T[] {
+  return [...challenges].sort((a, b) => b.completedCount - a.completedCount);
+}
+
 export function challengeCompletionInsight({
   completedCount,
   done,

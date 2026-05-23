@@ -8,7 +8,7 @@
 import { getCurrentSession } from "@/lib/session";
 import Link from "next/link";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { countCompletionsByChallenge } from "@/lib/challenge-insights";
+import { countCompletionsByChallenge, sortChallengesByCompletionCount } from "@/lib/challenge-insights";
 import { challengeLevelLabel } from "@/lib/challenges";
 import { loadChallengesOrdered } from "@/lib/load-challenges";
 import { formatWeightedScore, challengeWeight } from "@/lib/progress";
@@ -63,11 +63,13 @@ async function loadPublicData(): Promise<{ data: PublicData | null; error: strin
     const byChallenge = countCompletionsByChallenge(
       (completions ?? []) as { challenge_id: string }[],
     );
-    const challengeStats = challenges.map((c) => ({
-      title: c.title,
-      level: c.level,
-      completedCount: byChallenge.get(c.id) ?? 0,
-    }));
+    const challengeStats = sortChallengesByCompletionCount(
+      challenges.map((c) => ({
+        title: c.title,
+        level: c.level,
+        completedCount: byChallenge.get(c.id) ?? 0,
+      })),
+    );
 
     return {
       data: {
