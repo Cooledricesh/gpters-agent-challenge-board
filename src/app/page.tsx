@@ -8,6 +8,7 @@
 import { getCurrentSession } from "@/lib/session";
 import Link from "next/link";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { StatsCard, ProgressBar } from "@/components/board-ui";
 import { countCompletionsByChallenge, sortChallengesByCompletionCount } from "@/lib/challenge-insights";
 import { challengeLevelLabel } from "@/lib/challenges";
 import { loadChallengesOrdered } from "@/lib/load-challenges";
@@ -115,6 +116,12 @@ export default async function HomePage() {
         <p className="text-sm text-zinc-500">
           공개 순위에서는 닉네임이 보이지 않습니다. 기본 과제는 1점, 고급 과제는 1.25점으로 계산해요.
         </p>
+        <Link
+          href="/archive/22"
+          className="w-fit text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-300"
+        >
+          📦 22기 최종 현황 보기 (종료 아카이브) →
+        </Link>
       </header>
 
       {data.currentUserId ? (
@@ -241,27 +248,6 @@ export default async function HomePage() {
           </ul>
         )}
       </section>
-    </div>
-  );
-}
-
-function StatsCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded border border-zinc-200 bg-white p-3 text-center dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="text-xs text-zinc-500">{label}</div>
-      <div className="mt-1 text-xl font-semibold tabular-nums">{value}</div>
-    </div>
-  );
-}
-
-function ProgressBar({ percent }: { percent: number }) {
-  const clamped = Math.max(0, Math.min(100, percent));
-  return (
-    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-      <div
-        className="h-full bg-indigo-500 transition-[width]"
-        style={{ width: `${clamped}%` }}
-      />
     </div>
   );
 }

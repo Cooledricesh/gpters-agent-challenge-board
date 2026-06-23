@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import "./globals.css";
 import { getCurrentSession } from "@/lib/session";
+import { CURRENT_COHORT } from "@/lib/cohort";
 import LogoutButton from "@/components/logout-button";
 
 const geistSans = Geist({
@@ -18,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "지피터스 반려 에이전트 챌린지 보드",
-  description: "지피터스 22기 반려 에이전트 챌린지 진행률 공유 보드",
+  description: `지피터스 ${CURRENT_COHORT} 반려 에이전트 챌린지 진행률 공유 보드`,
 };
 
 export default async function RootLayout({
@@ -39,6 +40,12 @@ export default async function RootLayout({
               🍀 지피터스 반려 에이전트 챌린지 보드
             </Link>
             <div className="flex items-center gap-3">
+              <Link
+                href="/archive/22"
+                className="text-zinc-500 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100"
+              >
+                22기 아카이브
+              </Link>
               {session ? (
                 <>
                   {/*
@@ -69,7 +76,7 @@ export default async function RootLayout({
         </header>
         <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-6">{children}</main>
         <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-center text-xs text-zinc-400">
-          지피터스 22기 · 반려 에이전트 챌린지
+          지피터스 {CURRENT_COHORT} · 반려 에이전트 챌린지
         </footer>
       </body>
     </html>
