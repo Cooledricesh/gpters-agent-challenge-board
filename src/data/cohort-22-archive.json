@@ -1,0 +1,461 @@
+{
+  "cohort": "22",
+  "endedOn": "2026-06-23",
+  "generatedAt": "2026-06-23T07:58:46.585Z",
+  "totals": {
+    "students": 46,
+    "challenges": 43,
+    "completions": 582,
+    "avgWeightedScore": 13.43,
+    "totalWeightedScore": 49.25
+  },
+  "participants": [
+    {
+      "anonymousLabel": "챌린저 23",
+      "weightedScore": 38,
+      "progressPercent": 77
+    },
+    {
+      "anonymousLabel": "챌린저 21",
+      "weightedScore": 34.25,
+      "progressPercent": 70
+    },
+    {
+      "anonymousLabel": "챌린저 19",
+      "weightedScore": 33.25,
+      "progressPercent": 68
+    },
+    {
+      "anonymousLabel": "챌린저 09",
+      "weightedScore": 33,
+      "progressPercent": 67
+    },
+    {
+      "anonymousLabel": "챌린저 05",
+      "weightedScore": 25.5,
+      "progressPercent": 52
+    },
+    {
+      "anonymousLabel": "챌린저 28",
+      "weightedScore": 25.5,
+      "progressPercent": 52
+    },
+    {
+      "anonymousLabel": "챌린저 27",
+      "weightedScore": 24.5,
+      "progressPercent": 50
+    },
+    {
+      "anonymousLabel": "챌린저 25",
+      "weightedScore": 22.25,
+      "progressPercent": 45
+    },
+    {
+      "anonymousLabel": "챌린저 02",
+      "weightedScore": 21.75,
+      "progressPercent": 44
+    },
+    {
+      "anonymousLabel": "챌린저 48",
+      "weightedScore": 21.75,
+      "progressPercent": 44
+    },
+    {
+      "anonymousLabel": "챌린저 14",
+      "weightedScore": 21.25,
+      "progressPercent": 43
+    },
+    {
+      "anonymousLabel": "챌린저 11",
+      "weightedScore": 20.5,
+      "progressPercent": 42
+    },
+    {
+      "anonymousLabel": "챌린저 01",
+      "weightedScore": 20,
+      "progressPercent": 41
+    },
+    {
+      "anonymousLabel": "챌린저 22",
+      "weightedScore": 19.75,
+      "progressPercent": 40
+    },
+    {
+      "anonymousLabel": "챌린저 44",
+      "weightedScore": 19.75,
+      "progressPercent": 40
+    },
+    {
+      "anonymousLabel": "챌린저 08",
+      "weightedScore": 18.5,
+      "progressPercent": 38
+    },
+    {
+      "anonymousLabel": "챌린저 13",
+      "weightedScore": 17.75,
+      "progressPercent": 36
+    },
+    {
+      "anonymousLabel": "챌린저 36",
+      "weightedScore": 17.75,
+      "progressPercent": 36
+    },
+    {
+      "anonymousLabel": "챌린저 10",
+      "weightedScore": 17,
+      "progressPercent": 35
+    },
+    {
+      "anonymousLabel": "챌린저 20",
+      "weightedScore": 16.5,
+      "progressPercent": 34
+    },
+    {
+      "anonymousLabel": "챌린저 51",
+      "weightedScore": 16,
+      "progressPercent": 32
+    },
+    {
+      "anonymousLabel": "챌린저 24",
+      "weightedScore": 15.5,
+      "progressPercent": 31
+    },
+    {
+      "anonymousLabel": "챌린저 16",
+      "weightedScore": 15,
+      "progressPercent": 30
+    },
+    {
+      "anonymousLabel": "챌린저 46",
+      "weightedScore": 14.25,
+      "progressPercent": 29
+    },
+    {
+      "anonymousLabel": "챌린저 42",
+      "weightedScore": 13,
+      "progressPercent": 26
+    },
+    {
+      "anonymousLabel": "챌린저 37",
+      "weightedScore": 12.75,
+      "progressPercent": 26
+    },
+    {
+      "anonymousLabel": "챌린저 38",
+      "weightedScore": 11.75,
+      "progressPercent": 24
+    },
+    {
+      "anonymousLabel": "챌린저 33",
+      "weightedScore": 9.25,
+      "progressPercent": 19
+    },
+    {
+      "anonymousLabel": "챌린저 26",
+      "weightedScore": 7,
+      "progressPercent": 14
+    },
+    {
+      "anonymousLabel": "챌린저 40",
+      "weightedScore": 6,
+      "progressPercent": 12
+    },
+    {
+      "anonymousLabel": "챌린저 50",
+      "weightedScore": 6,
+      "progressPercent": 12
+    },
+    {
+      "anonymousLabel": "챌린저 35",
+      "weightedScore": 5,
+      "progressPercent": 10
+    },
+    {
+      "anonymousLabel": "챌린저 41",
+      "weightedScore": 5,
+      "progressPercent": 10
+    },
+    {
+      "anonymousLabel": "챌린저 18",
+      "weightedScore": 4,
+      "progressPercent": 8
+    },
+    {
+      "anonymousLabel": "챌린저 29",
+      "weightedScore": 3,
+      "progressPercent": 6
+    },
+    {
+      "anonymousLabel": "챌린저 49",
+      "weightedScore": 3,
+      "progressPercent": 6
+    },
+    {
+      "anonymousLabel": "챌린저 39",
+      "weightedScore": 2,
+      "progressPercent": 4
+    },
+    {
+      "anonymousLabel": "챌린저 47",
+      "weightedScore": 1,
+      "progressPercent": 2
+    },
+    {
+      "anonymousLabel": "챌린저 03",
+      "weightedScore": 0,
+      "progressPercent": 0
+    },
+    {
+      "anonymousLabel": "챌린저 06",
+      "weightedScore": 0,
+      "progressPercent": 0
+    },
+    {
+      "anonymousLabel": "챌린저 07",
+      "weightedScore": 0,
+      "progressPercent": 0
+    },
+    {
+      "anonymousLabel": "챌린저 12",
+      "weightedScore": 0,
+      "progressPercent": 0
+    },
+    {
+      "anonymousLabel": "챌린저 15",
+      "weightedScore": 0,
+      "progressPercent": 0
+    },
+    {
+      "anonymousLabel": "챌린저 17",
+      "weightedScore": 0,
+      "progressPercent": 0
+    },
+    {
+      "anonymousLabel": "챌린저 30",
+      "weightedScore": 0,
+      "progressPercent": 0
+    },
+    {
+      "anonymousLabel": "챌린저 31",
+      "weightedScore": 0,
+      "progressPercent": 0
+    }
+  ],
+  "challenges": [
+    {
+      "title": "오픈클로 or 헤르메스 설치",
+      "level": "basic",
+      "completedCount": 38
+    },
+    {
+      "title": "텔레그램 연결 성공!",
+      "level": "basic",
+      "completedCount": 37
+    },
+    {
+      "title": "온보딩- soul.md 설정 완료",
+      "level": "basic",
+      "completedCount": 35
+    },
+    {
+      "title": "대시보드 페이지에 들어가보기",
+      "level": "basic",
+      "completedCount": 32
+    },
+    {
+      "title": "두번째 봇 추가",
+      "level": "basic",
+      "completedCount": 28
+    },
+    {
+      "title": "구글 캘린더 연결하기",
+      "level": "basic",
+      "completedCount": 28
+    },
+    {
+      "title": "크론잡 설정, 확인",
+      "level": "basic",
+      "completedCount": 26
+    },
+    {
+      "title": "구글 이메일에 연결",
+      "level": "basic",
+      "completedCount": 26
+    },
+    {
+      "title": "매일 아침 정한 시간에 내 일정 보고 받기",
+      "level": "basic",
+      "completedCount": 25
+    },
+    {
+      "title": "심폐소생술",
+      "level": "basic",
+      "completedCount": 24
+    },
+    {
+      "title": "매일 아침 날씨 브리핑 받기",
+      "level": "basic",
+      "completedCount": 23
+    },
+    {
+      "title": "유지 보수 - 업데이트",
+      "level": "basic",
+      "completedCount": 21
+    },
+    {
+      "title": "유튜브 링크 주고 내용 요약시키기",
+      "level": "basic",
+      "completedCount": 20
+    },
+    {
+      "title": "이미지 생성 시켜보기",
+      "level": "basic",
+      "completedCount": 18
+    },
+    {
+      "title": "K-skill 설치",
+      "level": "advanced",
+      "completedCount": 17
+    },
+    {
+      "title": "텔레그램 그룹톡 만들기",
+      "level": "advanced",
+      "completedCount": 16
+    },
+    {
+      "title": "봇투봇 커뮤니케이션",
+      "level": "advanced",
+      "completedCount": 15
+    },
+    {
+      "title": "rtk 설정",
+      "level": "advanced",
+      "completedCount": 15
+    },
+    {
+      "title": "검은소, 누렁소",
+      "level": "advanced",
+      "completedCount": 15
+    },
+    {
+      "title": "텔레그램 스레드 모드 사용해보기",
+      "level": "basic",
+      "completedCount": 15
+    },
+    {
+      "title": "로컬 폴더(ex: 다운로드)정리해달라고 해보기",
+      "level": "basic",
+      "completedCount": 14
+    },
+    {
+      "title": "검문소",
+      "level": "basic",
+      "completedCount": 14
+    },
+    {
+      "title": "프레젠테이션 작성 시켜보기",
+      "level": "basic",
+      "completedCount": 14
+    },
+    {
+      "title": "옵시디언에 연결하기",
+      "level": "advanced",
+      "completedCount": 10
+    },
+    {
+      "title": "더 넓은 세상으로",
+      "level": "advanced",
+      "completedCount": 7
+    },
+    {
+      "title": "슬랙에 연결하기",
+      "level": "advanced",
+      "completedCount": 6
+    },
+    {
+      "title": "TTS 설정해서 목소리 만들어주기",
+      "level": "advanced",
+      "completedCount": 6
+    },
+    {
+      "title": "칸반 기능 사용(헤르메스)",
+      "level": "advanced",
+      "completedCount": 5
+    },
+    {
+      "title": "이런 간단한 대시보드 페이지를 에이전트와 상의해서 설계",
+      "level": "advanced",
+      "completedCount": 5
+    },
+    {
+      "title": "LLM-wiki 체계 만들기",
+      "level": "advanced",
+      "completedCount": 5
+    },
+    {
+      "title": "클로드 cli 연결하기",
+      "level": "advanced",
+      "completedCount": 4
+    },
+    {
+      "title": "Session_send를 해봤어요!(오픈클로)",
+      "level": "advanced",
+      "completedCount": 3
+    },
+    {
+      "title": "다양한 모델 탐색하기:Openrouter에 무료 모델 찾아서 사용해보기",
+      "level": "advanced",
+      "completedCount": 3
+    },
+    {
+      "title": "자동 결제",
+      "level": "advanced",
+      "completedCount": 2
+    },
+    {
+      "title": "디스코드에 연결하기",
+      "level": "advanced",
+      "completedCount": 2
+    },
+    {
+      "title": "내 아침 브리핑을 설정한 TTS로 팟캐스트처럼 받아보기",
+      "level": "advanced",
+      "completedCount": 2
+    },
+    {
+      "title": "🎭 살롱 (Salon)",
+      "level": "advanced",
+      "completedCount": 2
+    },
+    {
+      "title": "카카오톡 연동하기",
+      "level": "advanced",
+      "completedCount": 1
+    },
+    {
+      "title": "5월은 가족의 달",
+      "level": "advanced",
+      "completedCount": 1
+    },
+    {
+      "title": "(Hermes)'/goal' 명령어 사용해보기",
+      "level": "advanced",
+      "completedCount": 1
+    },
+    {
+      "title": "브라우저 유즈로 에이전트를 통해 웹페이지 조작해보기",
+      "level": "advanced",
+      "completedCount": 1
+    },
+    {
+      "title": "GUI로 자동화 시켜보기",
+      "level": "advanced",
+      "completedCount": 0
+    },
+    {
+      "title": "기억 보조장치",
+      "level": "advanced",
+      "completedCount": 0
+    }
+  ]
+}
