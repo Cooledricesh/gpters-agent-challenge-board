@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# cohort reset backups (닉네임 포함 원본 — 커밋 금지)
+/backups
+
 # debug
 npm-debug.log*
 yarn-debug.log*
