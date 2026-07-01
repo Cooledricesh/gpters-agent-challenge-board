@@ -10,10 +10,11 @@ import Link from "next/link";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { StatsCard, ProgressBar } from "@/components/board-ui";
 import { countCompletionsByChallenge, sortChallengesByCompletionCount } from "@/lib/challenge-insights";
-import { challengeLevelLabel } from "@/lib/challenges";
 import { loadChallengesOrdered } from "@/lib/load-challenges";
-import { formatWeightedScore, challengeWeight } from "@/lib/progress";
+import { loadExamplesByChallenge, type ChallengeExample } from "@/lib/examples";
+import { formatWeightedScore } from "@/lib/progress";
 import { loadAllStudentProgress, toPublicView } from "@/lib/stats";
+import PublicChallengeList from "@/components/public-challenge-list";
 
 export const dynamic = "force-dynamic";
 
@@ -31,23 +32,34 @@ interface PublicData {
     progressPercent: number;
     weightedScore: number;
   }[];
-  challenges: {
-    title: string;
-    level: "basic" | "advanced";
-    completedCount: number;
-  }[];
+  challenges: PublicChallenge[];
+}
+
+interface PublicChallenge {
+  id: string;
+  title: string;
+  level: "basic" | "advanced";
+  description: string | null;
+  detail: string | null;
+  completedCount: number;
+  examples: ChallengeExample[];
 }
 
 async function loadPublicData(): Promise<{ data: PublicData | null; error: string | null }> {
   try {
     const client = getSupabaseServiceClient();
     const session = await getCurrentSession();
-    const [{ data: challenges, error: challengeError }, { data: completions, error: coErr }, students] =
-      await Promise.all([
-        loadChallengesOrdered(client),
-        client.from("completions").select("challenge_id"),
-        loadAllStudentProgress(client),
-      ]);
+    const [
+      { data: challenges, error: challengeError },
+      { data: completions, error: coErr },
+      students,
+      examplesByChallenge,
+    ] = await Promise.all([
+      loadChallengesOrdered(client),
+      client.from("completions").select("challenge_id"),
+      loadAllStudentProgress(client),
+      loadExamplesByChallenge(client),
+    ]);
     if (challengeError) throw challengeError;
     if (coErr) throw coErr;
 
@@ -66,9 +78,13 @@ async function loadPublicData(): Promise<{ data: PublicData | null; error: strin
     );
     const challengeStats = sortChallengesByCompletionCount(
       challenges.map((c) => ({
+        id: c.id,
         title: c.title,
         level: c.level,
+        description: c.description,
+        detail: c.detail,
         completedCount: byChallenge.get(c.id) ?? 0,
+        examples: examplesByChallenge.get(c.id) ?? [],
       })),
     );
 
@@ -215,37 +231,14 @@ export default async function HomePage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">챌린지별 완료 현황</h2>
+        <h2 className="mb-1 text-lg font-semibold">챌린지별 완료 현황</h2>
+        <p className="mb-3 text-xs text-zinc-500">
+          과제를 누르면 상세 설명과 22기 선배들의 실제 사례글을 볼 수 있어요.
+        </p>
         {data.challenges.length === 0 ? (
           <p className="text-sm text-zinc-500">등록된 챌린지가 아직 없습니다.</p>
         ) : (
-          <ul className="space-y-2">
-            {data.challenges.map((c) => {
-              const percent =
-                data.totalStudents === 0
-                  ? 0
-                  : Math.round((c.completedCount / data.totalStudents) * 100);
-              return (
-                <li
-                  key={`${c.level}-${c.title}`}
-                  className="rounded border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                  <div className="flex justify-between gap-3">
-                    <span className="font-medium">
-                      {c.title}
-                      <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800">
-                        {challengeLevelLabel(c.level)} · {formatWeightedScore(challengeWeight(c.level))}
-                      </span>
-                    </span>
-                    <span className="text-zinc-500">
-                      {c.completedCount}/{data.totalStudents}
-                    </span>
-                  </div>
-                  <ProgressBar percent={percent} />
-                </li>
-              );
-            })}
-          </ul>
+          <PublicChallengeList challenges={data.challenges} totalStudents={data.totalStudents} />
         )}
       </section>
     </div>

@@ -17,6 +17,7 @@ import {
 } from "@/lib/progress";
 import { countCompletionsByChallenge } from "@/lib/challenge-insights";
 import { loadChallengesOrdered } from "@/lib/load-challenges";
+import { loadExamplesByChallenge } from "@/lib/examples";
 import { loadAllStudentProgress } from "@/lib/stats";
 import ChallengeChecklist from "./challenge-checklist";
 
@@ -32,11 +33,13 @@ export default async function MyPage() {
     { data: myCompletions, error: myCoErr },
     { data: allCompletions, error: allCoErr },
     allStudents,
+    examplesByChallenge,
   ] = await Promise.all([
     loadChallengesOrdered(client),
     client.from("completions").select("challenge_id").eq("user_id", session.sub),
     client.from("completions").select("challenge_id"),
     loadAllStudentProgress(client),
+    loadExamplesByChallenge(client),
   ]);
 
   if (chErr || myCoErr || allCoErr) {
@@ -105,6 +108,7 @@ export default async function MyPage() {
               completedCount: completedByChallenge.get(c.id) ?? 0,
               totalStudents,
               done: doneSet.has(c.id),
+              examples: examplesByChallenge.get(c.id) ?? [],
             }))}
           />
         )}

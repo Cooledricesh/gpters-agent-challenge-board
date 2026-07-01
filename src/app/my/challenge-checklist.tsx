@@ -11,6 +11,8 @@ import {
   type ChallengeLevel,
 } from "@/lib/challenges";
 import { challengeCompletionInsight } from "@/lib/challenge-insights";
+import type { ChallengeExample } from "@/lib/examples";
+import ChallengeExamples from "@/components/challenge-examples";
 
 interface ChallengeItem {
   id: string;
@@ -22,6 +24,7 @@ interface ChallengeItem {
   completedCount: number;
   totalStudents: number;
   done: boolean;
+  examples: ChallengeExample[];
 }
 
 export default function ChallengeChecklist({ initial }: { initial: ChallengeItem[] }) {
@@ -291,6 +294,7 @@ function ChallengeDetailModal({
           <p className="mt-4 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">
             {item.completedCount}/{item.totalStudents}명 완료
           </p>
+          <ChallengeExamples examples={item.examples} />
         </div>
         <div className="flex gap-2 border-t border-zinc-100 p-4 dark:border-zinc-800">
           <button

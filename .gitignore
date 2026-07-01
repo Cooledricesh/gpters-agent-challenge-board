@@ -27,6 +27,11 @@
 # cohort reset backups (닉네임 포함 원본 — 커밋 금지)
 /backups
 
+# 사례글 매핑 중간 산출물(재생성 가능). case-meta.json·case-study-mapping.json은 커밋.
+/scripts/data/case-batches
+/scripts/data/case-map-parts
+/scripts/data/challenges.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -43,3 +48,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase CLI 임시 파일
+/supabase/.temp

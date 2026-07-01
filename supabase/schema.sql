@@ -158,6 +158,28 @@ create index if not exists challenges_area_order_idx
   on public.challenges (level, area, order_index, created_at);
 
 -- =========================
+-- 2-1. challenge_examples (선배 사례글)
+-- =========================
+-- 이전 기수 참여자가 gpters.org에 발표한 사례글을 챌린지에 연결한다.
+--   * 챌린지 상세(모달)에서 "선배 사례"로 노출. challenge_id 1:N.
+--   * gpters.org 공개 글이므로 source_author/source_url 노출은 참여자 익명성과 무관.
+--   * scripts/import-case-studies.mjs 로 옵시디언 수집본에서 적재(cohort별 교체, idempotent).
+create table if not exists public.challenge_examples (
+  id            uuid primary key default gen_random_uuid(),
+  challenge_id  uuid not null references public.challenges (id) on delete cascade,
+  cohort        text not null default '22',
+  title         text not null,
+  summary       text,
+  source_url    text,
+  source_author text,
+  order_index   integer not null default 0,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists challenge_examples_challenge_idx
+  on public.challenge_examples (challenge_id, order_index);
+
+-- =========================
 -- 3. completions
 -- =========================
 create table if not exists public.completions (
