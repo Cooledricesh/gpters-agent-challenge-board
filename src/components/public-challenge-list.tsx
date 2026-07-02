@@ -10,7 +10,14 @@ import { useState } from "react";
 import { ProgressBar } from "@/components/board-ui";
 import ChallengeExamples from "@/components/challenge-examples";
 import { TierBadge, PrereqNotice } from "@/components/tech-tree-ui";
-import { challengeTierLabel, type ChallengeLevel, type ChallengeTier } from "@/lib/challenges";
+import TechTreeView from "@/components/tech-tree-view";
+import ViewToggle from "@/components/view-toggle";
+import {
+  challengeTierLabel,
+  normalizeChallengeArea,
+  type ChallengeLevel,
+  type ChallengeTier,
+} from "@/lib/challenges";
 import { formatWeightedScore, challengeTierWeight } from "@/lib/progress";
 import type { ChallengeExample } from "@/lib/examples";
 
@@ -19,6 +26,8 @@ export interface PublicChallenge {
   title: string;
   level: ChallengeLevel;
   tier: ChallengeTier;
+  area: string | null;
+  prerequisiteId: string | null;
   prerequisiteTitle: string | null;
   description: string | null;
   detail: string | null;
@@ -34,9 +43,25 @@ export default function PublicChallengeList({
   totalStudents: number;
 }) {
   const [selected, setSelected] = useState<PublicChallenge | null>(null);
+  const [view, setView] = useState<"tree" | "list">("tree");
 
   return (
     <>
+      <ViewToggle view={view} onChange={setView} />
+      {view === "tree" ? (
+        <TechTreeView
+          items={challenges.map((c) => ({
+            ...c,
+            area: normalizeChallengeArea(c.area),
+            done: null,
+            exampleCount: c.examples.length,
+          }))}
+          onSelect={(item) => {
+            const found = challenges.find((c) => c.id === item.id);
+            if (found) setSelected(found);
+          }}
+        />
+      ) : (
       <ul className="space-y-2">
         {challenges.map((c) => {
           const percent =
@@ -73,6 +98,7 @@ export default function PublicChallengeList({
           );
         })}
       </ul>
+      )}
 
       {selected && (
         <PublicChallengeModal

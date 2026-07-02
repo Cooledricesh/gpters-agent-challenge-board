@@ -24,3 +24,60 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* ==========================================================================
+ * 기술트리 연결선 — 좌→우 진행, 꺾인(엘보) 연결선.
+ * 구조: .tt-branch = [노드][가로 스텁][.tt-children(세로 스택)]
+ *   - 각 자식(.tt-child)은 왼쪽에 가로선(::before)과 형제를 잇는 세로선(::after)을 그린다.
+ *   - 첫/마지막 자식은 세로선을 절반만 그려 엘보를 만든다. 외동이면 세로선 생략.
+ * ========================================================================== */
+:root {
+  --tt-line: #d4d4d8; /* zinc-300 */
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tt-line: #3f3f46; /* zinc-700 */
+  }
+}
+
+.tt-stub {
+  width: 1.25rem;
+  flex-shrink: 0;
+  border-top: 2px solid var(--tt-line);
+  align-self: center;
+}
+
+.tt-child {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 1.25rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.tt-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1.25rem;
+  border-top: 2px solid var(--tt-line);
+}
+.tt-child::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-left: 2px solid var(--tt-line);
+}
+.tt-child:first-child::after {
+  top: 50%;
+}
+.tt-child:last-child::after {
+  top: 0;
+  bottom: 50%;
+}
+.tt-child:only-child::after {
+  display: none;
+}

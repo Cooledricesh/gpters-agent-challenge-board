@@ -5,6 +5,7 @@ import {
   groupChallengesForTree,
   normalizeChallengeTier,
 } from "./challenges";
+import { buildChallengeTree, countTreeNodes } from "./tech-tree";
 import {
   calculateTotalWeightedScore,
   calculateWeightedScore,
@@ -47,6 +48,40 @@ describe("티어 라벨", () => {
     expect(challengeTierLabel(1)).toBe("기초 T1");
     expect(challengeTierLabel(2)).toBe("활용 T2");
     expect(challengeTierLabel(3)).toBe("심화 T3");
+  });
+});
+
+describe("buildChallengeTree", () => {
+  const items = [
+    { id: "install", prerequisiteId: null, tier: 1 },
+    { id: "telegram", prerequisiteId: "install", tier: 1 },
+    { id: "cron", prerequisiteId: "telegram", tier: 1 },
+    { id: "briefing", prerequisiteId: "cron", tier: 2 },
+    { id: "salon", prerequisiteId: "bot2bot", tier: 3 }, // 고아(bot2bot 없음)
+  ];
+
+  it("prerequisite 사슬로 트리를 만들고 자식은 tier 오름차순으로 정렬한다", () => {
+    const roots = buildChallengeTree([
+      { id: "r", prerequisiteId: null, tier: 1 },
+      { id: "t3", prerequisiteId: "r", tier: 3 },
+      { id: "t1", prerequisiteId: "r", tier: 1 },
+    ]);
+    expect(roots).toHaveLength(1);
+    expect(roots[0].children.map((c) => c.item.id)).toEqual(["t1", "t3"]);
+  });
+
+  it("체인이 깊이로 이어진다 (install → telegram → cron → briefing)", () => {
+    const roots = buildChallengeTree(items);
+    const install = roots.find((r) => r.item.id === "install")!;
+    expect(install.children[0].item.id).toBe("telegram");
+    expect(install.children[0].children[0].item.id).toBe("cron");
+    expect(install.children[0].children[0].children[0].item.id).toBe("briefing");
+  });
+
+  it("선행 id가 목록에 없는 고아는 뿌리로 승격되어 화면에서 사라지지 않는다", () => {
+    const roots = buildChallengeTree(items);
+    expect(roots.map((r) => r.item.id).sort()).toEqual(["install", "salon"]);
+    expect(countTreeNodes(roots)).toBe(items.length);
   });
 });
 

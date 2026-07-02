@@ -14,6 +14,8 @@ import { challengeCompletionInsight } from "@/lib/challenge-insights";
 import type { ChallengeExample } from "@/lib/examples";
 import ChallengeExamples from "@/components/challenge-examples";
 import { TierBadge, PrereqNotice } from "@/components/tech-tree-ui";
+import TechTreeView from "@/components/tech-tree-view";
+import ViewToggle from "@/components/view-toggle";
 
 interface ChallengeItem {
   id: string;
@@ -51,6 +53,7 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
   const router = useRouter();
   const [items, setItems] = useState(initial);
   const [selected, setSelected] = useState<ChallengeItem | null>(null);
+  const [view, setView] = useState<"tree" | "list">("tree");
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -155,18 +158,33 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
         🌳 과제는 기술트리로 이어져 있어요. 흐리게 보이는 과제는 <strong>선행 과제를 먼저 하면 훨씬 수월</strong>하다는 안내일 뿐,
         순서를 알고 있다면 바로 체크해도 됩니다. T1 1점 · T2 1.25점 · T3 1.5점.
       </p>
-      {sections.map((section) => (
-        <ChallengeSection
-          key={section.key}
-          title={section.label}
-          subtitle={section.description}
-          items={section.items}
-          prereqInfo={prereqInfo}
-          pendingId={pendingId}
-          onToggle={toggle}
-          onSelect={setSelected}
+      <ViewToggle view={view} onChange={setView} />
+      {view === "tree" ? (
+        <TechTreeView
+          items={items.map((it) => ({
+            ...it,
+            done: it.done,
+            exampleCount: it.examples.length,
+          }))}
+          onSelect={(item) => {
+            const found = items.find((it) => it.id === item.id);
+            if (found) setSelected(found);
+          }}
         />
-      ))}
+      ) : (
+        sections.map((section) => (
+          <ChallengeSection
+            key={section.key}
+            title={section.label}
+            subtitle={section.description}
+            items={section.items}
+            prereqInfo={prereqInfo}
+            pendingId={pendingId}
+            onToggle={toggle}
+            onSelect={setSelected}
+          />
+        ))
+      )}
       {selected && (
         <ChallengeDetailModal
           item={selected}

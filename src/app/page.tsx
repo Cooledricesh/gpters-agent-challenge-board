@@ -40,6 +40,8 @@ interface PublicChallenge {
   title: string;
   level: "basic" | "advanced";
   tier: 1 | 2 | 3;
+  area: string | null;
+  prerequisiteId: string | null;
   prerequisiteTitle: string | null;
   description: string | null;
   detail: string | null;
@@ -86,6 +88,8 @@ async function loadPublicData(): Promise<{ data: PublicData | null; error: strin
         title: c.title,
         level: c.level,
         tier: c.tier,
+        area: c.area,
+        prerequisiteId: c.prerequisite_id,
         prerequisiteTitle: c.prerequisite_id ? titleById.get(c.prerequisite_id) ?? null : null,
         description: c.description,
         detail: c.detail,
@@ -195,11 +199,10 @@ export default async function HomePage() {
       </section>
 
       <section className="rounded border border-indigo-100 bg-indigo-50/60 p-4 text-sm text-indigo-900 dark:border-indigo-950 dark:bg-indigo-950/30 dark:text-indigo-100">
-        <h2 className="font-semibold">기술트리와 가중치</h2>
+        <h2 className="font-semibold">점수 안내</h2>
         <p className="mt-1 text-xs leading-5">
-          과제는 문명의 기술트리처럼 선행 과제에서 파생됩니다. 티어가 곧 난이도이자 점수예요 —
-          <strong> T1 기초 1점</strong>, <strong>T2 활용 1.25점</strong>, <strong>T3 심화 1.5점</strong>.
-          전체 순위는 완료 개수가 아니라 가중 점수가 높은 순으로 표시되며, 현재 만점은{" "}
+          <strong>T1 기초 1점</strong> · <strong>T2 활용 1.25점</strong> · <strong>T3 심화 1.5점</strong>.
+          순위는 완료 개수가 아니라 가중 점수가 높은 순으로 표시되며, 현재 만점은{" "}
           <strong>{formatWeightedScore(data.totalWeightedScore)}</strong>입니다.
         </p>
       </section>
