@@ -105,6 +105,8 @@ export default async function MyPage() {
               detail: c.detail,
               level: c.level,
               area: c.area,
+              tier: c.tier,
+              prerequisiteId: c.prerequisite_id,
               completedCount: completedByChallenge.get(c.id) ?? 0,
               totalStudents,
               done: doneSet.has(c.id),
@@ -149,7 +151,7 @@ function PersonalStats({
       <StatCard
         label="내 가중 점수"
         value={`${formatWeightedScore(weightedScore)} / ${formatWeightedScore(totalWeightedScore)}`}
-        hint="기본 1점, 고급 1.25점으로 계산"
+        hint="T1 1점 · T2 1.25점 · T3 1.5점으로 계산"
       />
       <StatCard
         label="참여 현황"

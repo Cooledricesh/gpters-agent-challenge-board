@@ -31,6 +31,7 @@
 /scripts/data/case-batches
 /scripts/data/case-map-parts
 /scripts/data/challenges.json
+/scripts/data/challenges-full.json
 
 # debug
 npm-debug.log*

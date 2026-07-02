@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { normalizeChallengeArea, normalizeChallengeLevel, type ChallengeAreaKey, type ChallengeLevel } from "./challenges";
+import {
+  normalizeChallengeArea,
+  normalizeChallengeLevel,
+  normalizeChallengeTier,
+  type ChallengeAreaKey,
+  type ChallengeLevel,
+  type ChallengeTier,
+} from "./challenges";
 
 export interface ChallengeRowWithLevel {
   id: string;
@@ -10,6 +17,10 @@ export interface ChallengeRowWithLevel {
   order_index: number;
   level: ChallengeLevel;
   area: ChallengeAreaKey | null;
+  /** 23기 기술트리 티어. 컬럼 없는 구버전 DB에서는 1로 폴백. */
+  tier: ChallengeTier;
+  /** 단일 선행과제 id. 뿌리(또는 구버전 DB)는 null. */
+  prerequisite_id: string | null;
 }
 
 interface RawChallengeRow {
@@ -20,28 +31,64 @@ interface RawChallengeRow {
   order_index: number;
   level?: string | null;
   area?: string | null;
+  tier?: number | null;
+  prerequisite_id?: string | null;
 }
 
 function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
+  const level = normalizeChallengeLevel(row.level);
   return {
     id: row.id,
     title: row.title,
     description: row.description,
     detail: row.detail ?? null,
     order_index: row.order_index,
-    level: normalizeChallengeLevel(row.level),
+    level,
     area: normalizeChallengeArea(row.area),
+    // tier 컬럼이 없는 구버전 DB에서는 level에서 파생해 가중치(1/1.25)를 보존한다.
+    tier: row.tier != null ? normalizeChallengeTier(row.tier) : level === "advanced" ? 2 : 1,
+    prerequisite_id: row.prerequisite_id ?? null,
   };
 }
 
 function shouldFallbackToLegacyChallengeShape(error: { message?: string; code?: string }): boolean {
   const message = error.message ?? "";
-  return message.includes("level") || message.includes("detail") || message.includes("area") || message.includes("schema cache");
+  return (
+    message.includes("level") ||
+    message.includes("detail") ||
+    message.includes("area") ||
+    message.includes("tier") ||
+    message.includes("prerequisite_id") ||
+    message.includes("schema cache")
+  );
 }
 
+/**
+ * 챌린지를 (tier, order_index, created_at) 순으로 로드한다.
+ * 신규 컬럼(tier/prerequisite_id)이 없는 DB에서는 단계적으로 폴백한다.
+ */
 export async function loadChallengesOrdered(
   client: SupabaseClient,
 ): Promise<{ data: ChallengeRowWithLevel[]; error: Error | null; usedLegacyFallback: boolean }> {
+  const withTree = await client
+    .from("challenges")
+    .select("id, title, description, detail, order_index, level, area, tier, prerequisite_id")
+    .order("tier", { ascending: true })
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (!withTree.error) {
+    return {
+      data: ((withTree.data ?? []) as RawChallengeRow[]).map(mapChallenge),
+      error: null,
+      usedLegacyFallback: false,
+    };
+  }
+
+  if (!shouldFallbackToLegacyChallengeShape(withTree.error)) {
+    return { data: [], error: withTree.error, usedLegacyFallback: false };
+  }
+
   const withDetail = await client
     .from("challenges")
     .select("id, title, description, detail, order_index, level, area")
@@ -52,12 +99,12 @@ export async function loadChallengesOrdered(
     return {
       data: ((withDetail.data ?? []) as RawChallengeRow[]).map(mapChallenge),
       error: null,
-      usedLegacyFallback: false,
+      usedLegacyFallback: true,
     };
   }
 
   if (!shouldFallbackToLegacyChallengeShape(withDetail.error)) {
-    return { data: [], error: withDetail.error, usedLegacyFallback: false };
+    return { data: [], error: withDetail.error, usedLegacyFallback: true };
   }
 
   const withoutDetail = await client

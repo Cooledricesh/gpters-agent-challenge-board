@@ -157,6 +157,34 @@ create index if not exists challenges_level_order_idx
 create index if not exists challenges_area_order_idx
   on public.challenges (level, area, order_index, created_at);
 
+-- 23기 기술트리: 티어(1=기초 1점, 2=활용 1.25점, 3=심화 1.5점)와
+-- 단일 선행과제(prerequisite_id, 뿌리만 null). level은 하위 호환용으로 유지하며
+-- tier에서 파생(T1→basic, T2/T3→advanced) 세팅한다.
+alter table public.challenges
+  add column if not exists tier integer not null default 1;
+
+alter table public.challenges
+  add column if not exists prerequisite_id uuid references public.challenges (id) on delete set null;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'challenges_tier_check'
+      and conrelid = 'public.challenges'::regclass
+  ) then
+    alter table public.challenges
+      add constraint challenges_tier_check check (tier in (1, 2, 3));
+  end if;
+end $$;
+
+create index if not exists challenges_prerequisite_idx
+  on public.challenges (prerequisite_id);
+
+create index if not exists challenges_tier_order_idx
+  on public.challenges (tier, order_index, created_at);
+
 -- =========================
 -- 2-1. challenge_examples (선배 사례글)
 -- =========================

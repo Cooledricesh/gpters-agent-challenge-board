@@ -12,7 +12,7 @@ import { StatsCard, ProgressBar } from "@/components/board-ui";
 import { countCompletionsByChallenge, sortChallengesByCompletionCount } from "@/lib/challenge-insights";
 import { loadChallengesOrdered } from "@/lib/load-challenges";
 import { loadExamplesByChallenge, type ChallengeExample } from "@/lib/examples";
-import { formatWeightedScore } from "@/lib/progress";
+import { calculateTotalWeightedScore, formatWeightedScore } from "@/lib/progress";
 import { loadAllStudentProgress, toPublicView } from "@/lib/stats";
 import PublicChallengeList from "@/components/public-challenge-list";
 
@@ -39,6 +39,8 @@ interface PublicChallenge {
   id: string;
   title: string;
   level: "basic" | "advanced";
+  tier: 1 | 2 | 3;
+  prerequisiteTitle: string | null;
   description: string | null;
   detail: string | null;
   completedCount: number;
@@ -67,7 +69,8 @@ async function loadPublicData(): Promise<{ data: PublicData | null; error: strin
     const totalStudents = students.length;
     const totalChallenges = challenges.length;
     const totalCompletions = students.reduce((s, r) => s + r.completedCount, 0);
-    const totalWeightedScore = students[0]?.totalWeightedScore ?? 0;
+    // 참여자 0명이어도 만점은 과제 목록에서 직접 계산한다.
+    const totalWeightedScore = calculateTotalWeightedScore(challenges);
     const avgWeightedScore =
       totalStudents === 0
         ? 0
@@ -76,11 +79,14 @@ async function loadPublicData(): Promise<{ data: PublicData | null; error: strin
     const byChallenge = countCompletionsByChallenge(
       (completions ?? []) as { challenge_id: string }[],
     );
+    const titleById = new Map(challenges.map((c) => [c.id, c.title]));
     const challengeStats = sortChallengesByCompletionCount(
       challenges.map((c) => ({
         id: c.id,
         title: c.title,
         level: c.level,
+        tier: c.tier,
+        prerequisiteTitle: c.prerequisite_id ? titleById.get(c.prerequisite_id) ?? null : null,
         description: c.description,
         detail: c.detail,
         completedCount: byChallenge.get(c.id) ?? 0,
@@ -130,7 +136,7 @@ export default async function HomePage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">{data.appName}</h1>
         <p className="text-sm text-zinc-500">
-          공개 순위에서는 닉네임이 보이지 않습니다. 기본 과제는 1점, 고급 과제는 1.25점으로 계산해요.
+          공개 순위에서는 닉네임이 보이지 않습니다. 과제는 기술트리로 이어지며 T1 1점 · T2 1.25점 · T3 1.5점으로 계산해요.
         </p>
         <Link
           href="/archive/22"
@@ -189,11 +195,12 @@ export default async function HomePage() {
       </section>
 
       <section className="rounded border border-indigo-100 bg-indigo-50/60 p-4 text-sm text-indigo-900 dark:border-indigo-950 dark:bg-indigo-950/30 dark:text-indigo-100">
-        <h2 className="font-semibold">가중치 안내</h2>
+        <h2 className="font-semibold">기술트리와 가중치</h2>
         <p className="mt-1 text-xs leading-5">
-          기본 과제는 <strong>1점</strong>, 고급 과제는 <strong>1.25점</strong>입니다.
-          전체 순위는 완료 개수가 아니라 이 가중 점수가 높은 순으로 표시됩니다.
-          현재 전체 만점은 <strong>{formatWeightedScore(data.totalWeightedScore)}</strong>입니다.
+          과제는 문명의 기술트리처럼 선행 과제에서 파생됩니다. 티어가 곧 난이도이자 점수예요 —
+          <strong> T1 기초 1점</strong>, <strong>T2 활용 1.25점</strong>, <strong>T3 심화 1.5점</strong>.
+          전체 순위는 완료 개수가 아니라 가중 점수가 높은 순으로 표시되며, 현재 만점은{" "}
+          <strong>{formatWeightedScore(data.totalWeightedScore)}</strong>입니다.
         </p>
       </section>
 

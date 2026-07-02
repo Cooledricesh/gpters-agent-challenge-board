@@ -29,12 +29,12 @@ async function main() {
   const dataDir = resolve(REPO_ROOT, "scripts", "data");
   mkdirSync(dataDir, { recursive: true });
 
-  // 1. 챌린지 목록 덤프.
+  // 1. 챌린지 목록 덤프. 매핑은 제목이 아니라 description/detail(완료 기준)을 근거로 한다.
   const client = makeServiceClient();
   const challenges = await client
     .from("challenges")
-    .select("id, title, level, area, order_index")
-    .order("level", { ascending: true })
+    .select("id, title, tier, area, description, detail, order_index")
+    .order("tier", { ascending: true })
     .order("order_index", { ascending: true })
     .then((r) => unwrap(r, "challenges"));
   writeFileSync(

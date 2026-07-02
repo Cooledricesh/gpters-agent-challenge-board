@@ -80,7 +80,7 @@ function main() {
   console.log("=== 챌린지별 선배 사례 (검토용) ===");
   for (const ch of challenges) {
     const list = byChallenge.get(ch.title) ?? [];
-    const tag = ch.level === "advanced" ? "고급" : "기본";
+    const tag = ch.tier ? `T${ch.tier}` : ch.level === "advanced" ? "고급" : "기본";
     console.log(`\n[${tag}] ${ch.title}  (${list.length}건)`);
     for (const it of list) {
       console.log(`   - (${it.confidence}) ${it.title}`);

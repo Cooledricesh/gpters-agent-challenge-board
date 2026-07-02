@@ -9,14 +9,17 @@ import { useState } from "react";
 
 import { ProgressBar } from "@/components/board-ui";
 import ChallengeExamples from "@/components/challenge-examples";
-import { challengeLevelLabel, type ChallengeLevel } from "@/lib/challenges";
-import { formatWeightedScore, challengeWeight } from "@/lib/progress";
+import { TierBadge, PrereqNotice } from "@/components/tech-tree-ui";
+import { challengeTierLabel, type ChallengeLevel, type ChallengeTier } from "@/lib/challenges";
+import { formatWeightedScore, challengeTierWeight } from "@/lib/progress";
 import type { ChallengeExample } from "@/lib/examples";
 
 export interface PublicChallenge {
   id: string;
   title: string;
   level: ChallengeLevel;
+  tier: ChallengeTier;
+  prerequisiteTitle: string | null;
   description: string | null;
   detail: string | null;
   completedCount: number;
@@ -48,9 +51,10 @@ export default function PublicChallengeList({
               >
                 <div className="flex justify-between gap-3">
                   <span className="font-medium">
-                    {c.title}
+                    <TierBadge tier={c.tier} />
+                    <span className="ml-1.5">{c.title}</span>
                     <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800">
-                      {challengeLevelLabel(c.level)} · {formatWeightedScore(challengeWeight(c.level))}
+                      {formatWeightedScore(challengeTierWeight(c.tier))}
                     </span>
                     {c.examples.length > 0 && (
                       <span className="ml-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">
@@ -62,6 +66,7 @@ export default function PublicChallengeList({
                     {c.completedCount}/{totalStudents}
                   </span>
                 </div>
+                {c.prerequisiteTitle && <PrereqNotice title={c.prerequisiteTitle} done={null} />}
                 <ProgressBar percent={percent} />
               </button>
             </li>
@@ -107,11 +112,14 @@ function PublicChallengeModal({
         <div className="flex items-start justify-between gap-3 border-b border-zinc-100 p-4 dark:border-zinc-800">
           <div>
             <p className="text-xs font-medium text-indigo-600 dark:text-indigo-300">
-              {challengeLevelLabel(challenge.level)}
+              {challengeTierLabel(challenge.tier)} · {formatWeightedScore(challengeTierWeight(challenge.tier))}
             </p>
             <h3 id="public-challenge-title" className="mt-1 text-lg font-semibold">
               {challenge.title}
             </h3>
+            {challenge.prerequisiteTitle && (
+              <PrereqNotice title={challenge.prerequisiteTitle} done={null} />
+            )}
           </div>
           <button
             type="button"

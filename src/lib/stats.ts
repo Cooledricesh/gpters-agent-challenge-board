@@ -86,10 +86,14 @@ export async function loadAllStudentProgress(
   return ((users ?? []) as AppUserRow[]).map((u) => {
     const completedRows = completedByUser.get(u.id) ?? [];
     const weightedScore = calculateWeightedScore(
-      completedRows.map((row) => ({
-        level: challengeById.get(row.challenge_id)?.level ?? "basic",
-        completed: true,
-      })),
+      completedRows.map((row) => {
+        const challenge = challengeById.get(row.challenge_id);
+        return {
+          level: challenge?.level ?? "basic",
+          tier: challenge?.tier ?? null,
+          completed: true,
+        };
+      }),
     );
     return {
       id: u.id,

@@ -9,10 +9,13 @@
  * - 비밀번호: 관리자가 수강생별로 직접 지정한 값을 bcrypt 해시로 저장한다.
  */
 
-import { normalizeChallengeLevel, type ChallengeLevel } from "./challenges";
+import { normalizeChallengeLevel, normalizeChallengeTier, type ChallengeLevel, type ChallengeTier } from "./challenges";
 
 export const BASIC_CHALLENGE_WEIGHT = 1;
 export const ADVANCED_CHALLENGE_WEIGHT = 1.25;
+
+/** 23기 기술트리: 티어가 난이도이자 점수다. T1=1점, T2=1.25점, T3=1.5점. */
+export const TIER_WEIGHTS: Record<ChallengeTier, number> = { 1: 1, 2: 1.25, 3: 1.5 };
 
 export interface PublicParticipant {
   anonymousLabel: string;
@@ -41,6 +44,8 @@ export interface ParticipantRank {
 
 export interface WeightedChallengeInput {
   level: ChallengeLevel | string | null | undefined;
+  /** 티어가 있으면 티어 가중치가 level보다 우선한다(23기 기술트리). */
+  tier?: number | null;
   completed: boolean;
 }
 
@@ -50,14 +55,29 @@ export function challengeWeight(level: ChallengeLevel | string | null | undefine
     : BASIC_CHALLENGE_WEIGHT;
 }
 
+/** 티어 기반 가중치. 유효하지 않은 티어는 T1로 취급. */
+export function challengeTierWeight(tier: number | null | undefined): number {
+  return TIER_WEIGHTS[normalizeChallengeTier(tier)];
+}
+
+/** 항목별 가중치: tier가 지정돼 있으면 tier, 아니면 level 기준(아카이브 등 하위 호환). */
+export function weightedChallengeItemWeight(
+  item: Pick<WeightedChallengeInput, "level" | "tier">,
+): number {
+  return item.tier != null ? challengeTierWeight(item.tier) : challengeWeight(item.level);
+}
+
 export function calculateWeightedScore(challenges: readonly WeightedChallengeInput[]): number {
-  return challenges.reduce((sum, item) => sum + (item.completed ? challengeWeight(item.level) : 0), 0);
+  return challenges.reduce(
+    (sum, item) => sum + (item.completed ? weightedChallengeItemWeight(item) : 0),
+    0,
+  );
 }
 
 export function calculateTotalWeightedScore(
-  challenges: readonly Pick<WeightedChallengeInput, "level">[],
+  challenges: readonly Pick<WeightedChallengeInput, "level" | "tier">[],
 ): number {
-  return challenges.reduce((sum, item) => sum + challengeWeight(item.level), 0);
+  return challenges.reduce((sum, item) => sum + weightedChallengeItemWeight(item), 0);
 }
 
 export function formatWeightedScore(score: number): string {
