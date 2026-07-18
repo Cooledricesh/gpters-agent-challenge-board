@@ -81,6 +81,10 @@ export default async function MyPage() {
           </span>
         </div>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{message}</p>
+        <p className="mt-1 text-xs text-zinc-500">
+          이 트리는 다 깨는 트리가 아니라 내 가지를 골라 기르는 트리예요. T1은 첫 주 목표치일 뿐
+          마감이 아닙니다 — Windows(WSL2)라면 설치+텔레그램 연결만으로도 훌륭한 첫 주!
+        </p>
       </header>
 
       <PersonalStats

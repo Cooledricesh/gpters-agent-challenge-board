@@ -58,10 +58,11 @@ describe("PublicChallengeList", () => {
     expect(within(dialog).getByText("by CAMI")).toBeTruthy();
   });
 
-  it("사례가 없으면 배지도 없고 모달에도 선배 사례 섹션이 없다", () => {
+  it("사례가 없으면 배지는 없고 모달에는 개척 과제 안내가 나온다", () => {
     render(<PublicChallengeList challenges={[noExample]} totalStudents={46} />);
     expect(screen.queryByText(/^사례 /)).toBeNull();
     fireEvent.click(screen.getByLabelText("텔레그램 스레드 모드 사용해보기 상세 보기"));
     expect(screen.queryByText("22기 선배 사례")).toBeNull();
+    expect(screen.getByText("개척 과제")).toBeTruthy();
   });
 });

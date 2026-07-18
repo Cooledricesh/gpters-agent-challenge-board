@@ -1,12 +1,24 @@
 /**
  * challenge-examples.tsx — 챌린지 상세의 "선배 사례" 섹션(공유).
- * /my 모달과 공개 홈 모달이 동일 UI를 쓴다. 사례 없으면 아무것도 렌더하지 않는다.
+ * /my 모달과 공개 홈 모달이 동일 UI를 쓴다.
+ * 사례가 없는 과제는 숨기는 대신 "개척 과제"로 안내해 첫 사례글 작성을 유도한다.
  */
 
 import type { ChallengeExample } from "@/lib/examples";
 
 export default function ChallengeExamples({ examples }: { examples: ChallengeExample[] }) {
-  if (examples.length === 0) return null;
+  if (examples.length === 0) {
+    return (
+      <section className="mt-5 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+        <h4 className="flex items-center gap-1.5 text-sm font-semibold">
+          <span>🏕️</span> 개척 과제
+        </h4>
+        <p className="mt-1 text-xs leading-5 text-zinc-500">
+          아직 선배 사례가 없는 과제예요. 먼저 해내고 사례글을 남기면 다음 기수의 보물이 됩니다.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section className="mt-5 border-t border-zinc-100 pt-4 dark:border-zinc-800">

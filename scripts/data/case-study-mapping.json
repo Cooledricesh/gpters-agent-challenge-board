@@ -64,8 +64,8 @@
       },
       {
         "challengeTitle": "노션 연결하기",
-        "confidence": "medium",
-        "rationale": "노션 전용 과제가 있으므로 'MCP 하나 연결해보기'가 아닌 이 과제로 매핑하는 것이 우선순위에 맞다. 다만 Notion API를 연결해 에이전트가 기존 노션 기록을 읽어 옵시디언으로 이전하는 읽기 방향만 시연했고, '노션 페이지를 하나 만들거나 갱신하면 성공'이라는 쓰기 완료 기준은 미시연이라 medium이다."
+        "confidence": "low",
+        "rationale": "Notion API로 기존 노션 기록을 옵시디언으로 이전하는 읽기 방향만 다뤄, '노션 페이지를 하나 만들거나 갱신하면 성공'이라는 쓰기 완료 기준이 미시연이다. 이전 작업의 에이전트 관여 여부도 원문에서 확증되지 않아 low가 적정하다."
       }
     ]
   },
@@ -98,6 +98,11 @@
         "challengeTitle": "두번째 봇 추가",
         "confidence": "high",
         "rationale": "원제 부제가 'open claw 봇 2개 만들기'이고 핵심 발견이 '봇마다 고유 토큰을 할당하면 한 플랫폼에서 여러 봇 안정 운영 가능' — 두번째 봇 추가 detail의 봇별 인증(토큰) 분리 함정과 정확히 대응하며, 별도 페르소나의 코치 봇을 추가 운영해 완료 기준에 부합한다. 기존 '매일 기록 봇' 매핑은 자동 알림·데이터 누적이 '향후 계획'으로 명시돼 '3일 이상 기록' 완료 기준 미충족이라 이 과제로 교체했다."
+      },
+      {
+        "challengeTitle": "온보딩 — soul.md 설정",
+        "confidence": "medium",
+        "rationale": "페르소나 설정으로 '다그치지 않는 코치'를 구현했다고 완료 사실로 명시해 말투·역할이 대화에서 느껴진다는 완료 기준의 실질을 충족한다. OpenClaw에서 페르소나 설정의 표준 경로가 soul.md이나 파일명 직접 언급은 없어 medium."
       }
     ]
   },
@@ -141,6 +146,11 @@
         "challengeTitle": "두번째 봇 추가",
         "confidence": "medium",
         "rationale": "콩이와 약콩이 두 봇을 동시에 운영하며 각자 다른 페르소나로 응답하게 한 점이 '두 봇이 각자 다른 페르소나로 동시에 응답하면 성공' 기준에 부합한다. 봇 간 대화는 스크린샷 수동 릴레이로 유도한 것이라 봇투봇 과제 기준(자율 멀티턴)에는 못 미쳐 매핑하지 않았다."
+      },
+      {
+        "challengeTitle": "심폐소생술 — 죽은 봇 살리기",
+        "confidence": "medium",
+        "rationale": "원문에 'Claude Code로 봇을 복구하고'가 명시되어 '멈춘 봇을 한 번 되살려내면 성공' 완료 기준을 충족한다. 외부 도구에 보여주며 복구하는 방식은 과제 detail 3단계의 만능 복구 전략 그대로이나, 복구 과정의 세부 증거가 없어 medium."
       }
     ]
   },
@@ -152,6 +162,16 @@
         "challengeTitle": "24시간 상시 운영 환경 만들기",
         "confidence": "high",
         "rationale": "detail이 제시한 'DigitalOcean 등 VPS로 이주' 경로 그대로 클라우드 VPS에 헤르메스를 올려 내 컴퓨터 없이도 24시간 봇이 응답하는 환경을 구축했다."
+      },
+      {
+        "challengeTitle": "오픈클로 or 헤르메스 설치",
+        "confidence": "medium",
+        "rationale": "Ubuntu VPS에 Hermes Agent를 설치하고 OpenAI Provider 연결까지 완료한 실제 구축기로 '모델 응답 1회 수신' 완료 기준을 충족한다. detail의 Mac/WSL2 안내는 권장 경로일 뿐이므로 VPS 설치도 유효하나, 표준 로컬 경로가 아니라 medium."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "medium",
+        "rationale": "핵심이 '텔레그램으로 24시간 AI 비서 제어'여서 폰에서 말을 걸어 답장을 받는 완료 기준을 실사용으로 충족한다. BotFather 토큰 발급 등 연결 과정 서술이 없어 medium."
       }
     ]
   },
@@ -206,6 +226,11 @@
         "challengeTitle": "온보딩 — soul.md 설정",
         "confidence": "medium",
         "rationale": "OpenClaw 기반으로 선호 캐릭터 페르소나를 부여해 상호작용 만족도를 높인 점이 '말투·역할이 대화에서 느껴지면 성공' 기준을 부분 시연한다."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "low",
+        "rationale": "사용 도구에 Telegram이 명시되고 글 전체가 OpenClaw 반려 에이전트와의 실사용 대화(일정 리마인드·대화 요약)를 다뤄 완료 기준 충족의 정황이 있으나, 연결 과정 서술이 전무해 low."
       }
     ]
   },
@@ -252,8 +277,8 @@
       },
       {
         "challengeTitle": "내 반복 업무 하나 자동화하기 (졸업 과제)",
-        "confidence": "medium",
-        "rationale": "정기 반복 보고라는 실제 반복 업무를 자동화된 의사결정 화면으로 전환한 점이 '매주 반복하는 실제 업무 하나를 에이전트에게 맡기기'라는 과제 설명에 부합하나 절감 시간 측정은 드러나지 않는다."
+        "confidence": "low",
+        "rationale": "정기 반복 보고라는 실제 반복 업무를 자동화된 의사결정 화면으로 전환한 점은 과제 설명에 부합하나, 완료 기준인 '자동화 전후 소요 시간 비교 공유'가 원문에 전혀 없어 low로 조정한다."
       }
     ]
   },
@@ -451,8 +476,8 @@
       },
       {
         "challengeTitle": "두번째 봇 추가",
-        "confidence": "medium",
-        "rationale": "원문에 '두 번째 봇 제작까지 성공'이 명시되어 과제의 핵심 행위를 수행했으나, 두 봇이 각자 다른 페르소나로 동시에 응답하는 완료 기준까지는 확인되지 않아 부분 시연이다. (구글 캘린더·메일은 '해봐야겠다'는 계획 단계라 매핑 제외.)"
+        "confidence": "low",
+        "rationale": "원문은 첫 봇을 만들며 따라잡는 입문기로, 두번째 봇 제작이나 두 봇이 각자 다른 페르소나로 동시 응답한다는 완료 기준의 증거가 확인되지 않는다. 멀티봇 확장 의지만 보이는 저신뢰 참고 사례. (구글 캘린더·메일은 '해봐야겠다'는 계획 단계라 매핑 제외.)"
       }
     ]
   },
@@ -469,6 +494,16 @@
         "challengeTitle": "MCP 하나 연결해보기",
         "confidence": "high",
         "rationale": "과제 detail이 22기 사례로 명시한 '한국 법령 MCP'가 바로 이 글의 korean-law-mcp 연결로(22기 사례글 중 유일), 전용 과제가 없는 기성 MCP를 골라 에이전트 능력을 확장한다는 과제 취지를 그대로 시연한다. 운동기록은 크론·페르소나 기반 일일 기록(매일 기록 봇)의 완료 기준(3일 이상 기록) 근거가 요약에 없어 제외했다."
+      },
+      {
+        "challengeTitle": "오픈클로 or 헤르메스 설치",
+        "confidence": "medium",
+        "rationale": "Hermes 기반 봇 샐리의 제작·운영기이므로 '모델 응답 1회 수신' 완료 기준은 운영 사실 자체로 충족된다. 설치 과정 서술이 없어 medium."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "medium",
+        "rationale": "'Hermes + Telegram으로 에이전트 봇 샐리 제작'이 명시되고 그 봇으로 일정관리·운동기록을 실제 운영했으므로 완료 기준을 충족한다. 폰 대화 장면의 직접 서술이 없어 medium."
       }
     ]
   },
@@ -478,8 +513,8 @@
     "assignments": [
       {
         "challengeTitle": "긴 작업 통째로 맡겨보기 (자율 실행)",
-        "confidence": "high",
-        "rationale": "여행 계획 수립이라는 다단계 작업을 CLAUDE.md 사전 정보 설계 후 AI 팀이 자동 분담해 완주시킨 것이 과제 예시('여행 계획을 짜서 일정표로 정리')와 '명령보다 배경 설명이 중요' 팁을 그대로 시연한다."
+        "confidence": "low",
+        "rationale": "여행 계획 수립이라는 다단계 작업을 CLAUDE.md 사전 정보 설계로 완주시켜 과제 예시('여행 계획을 짜서 일정표로 정리')와 '명령보다 배경 설명이 중요' 팁의 취지에는 부합하나, 사용 도구가 Claude Code·멀티 에이전트로 오픈클로/헤르메스 반려 에이전트 수행이 아니고 '추가 지시 2회 이내' 완료 기준도 원문으로 확인되지 않아 참고 사례 수준의 low가 적정하다."
       }
     ]
   },
@@ -512,6 +547,11 @@
         "challengeTitle": "크론잡 설정, 확인",
         "confidence": "medium",
         "rationale": "크론잡을 실제 등록·운영하며 토큰 초과 에러까지 극복한 것이 '등록한 크론잡이 실제 실행되면 성공' 기준에 부합하나, 요약상 크론잡 운영이 글의 부분 요소라 부분 시연으로 판단했다."
+      },
+      {
+        "challengeTitle": "두번째 봇 추가",
+        "confidence": "medium",
+        "rationale": "다정이(OpenClaw 개인 비서)/냉정이(Hermes 업무 자동화)라는 역할이 다른 두 페르소나를 동시 운영하며 하이브리드 전략까지 도출해 '역할이 다른 두번째 봇' 취지와 완료 기준에 부합한다. 동일 패턴의 스머펫·똘똘이스머프 사례와 일관된 매핑. 두 봇의 동시 응답 장면이 구체적이지 않아 medium."
       }
     ]
   },
@@ -711,6 +751,26 @@
         "challengeTitle": "MCP 하나 연결해보기",
         "confidence": "high",
         "rationale": "Korail MCP를 연결해 KTX 예약을 실제로 처리하게 한 점이 '연결한 MCP의 기능을 에이전트가 실제로 사용해 답하면 성공'이라는 완료 기준(detail의 코레일 MCP 예시)에 정확히 부합한다. 전용 과제가 없는 MCP를 고르라는 detail 권고와도 일치."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "high",
+        "rationale": "김실장·미스김 참모진을 텔레그램에서 상시 운영한 기록 그 자체로, 폰 텔레그램에서 말을 걸어 답장을 받는 완료 기준을 실사용으로 명백히 충족한다."
+      },
+      {
+        "challengeTitle": "크론잡 설정, 확인",
+        "confidence": "medium",
+        "rationale": "참모진 운영에 정기 실행(크론) 기반 보고·자동화가 포함되어 '정해진 시간에 실제 실행' 기준에 부합하나, 크론잡 등록 과정 자체의 서술은 부분적이라 medium."
+      },
+      {
+        "challengeTitle": "구글 캘린더 연결하기",
+        "confidence": "medium",
+        "rationale": "핵심 요약이 '일정·이메일·KTX 예약 자동화'로 일정 자동화를 운영 성과로 명시해 에이전트가 실제 캘린더를 읽고 쓴다는 완료 기준의 정황이 있다. OAuth 연결 과정 세부가 없어 medium."
+      },
+      {
+        "challengeTitle": "구글 이메일(Gmail)에 연결",
+        "confidence": "medium",
+        "rationale": "이메일 자동화가 Google Workspace 기반 운영 성과로 명시되어 '실제 받은편지함 내용으로 답하면 성공' 기준 충족의 정황이 있다. 연결·권한 설정 세부가 없어 medium."
       }
     ]
   },
@@ -727,6 +787,11 @@
         "challengeTitle": "검은소, 누렁소 — 다른 도구도 타보기",
         "confidence": "medium",
         "rationale": "스머펫은 OpenClaw, 똘똘이스머프는 Hermes로 두 도구를 모두 설치해 다른 페르소나를 부여한 듀얼 세팅으로, 과제 detail이 예시한 '두 도구에 다른 페르소나를 부여한 비교기' 패턴에 부합한다. 같은 작업 비교 소감까지는 요약에서 확인되지 않아 medium."
+      },
+      {
+        "challengeTitle": "온보딩 — soul.md 설정",
+        "confidence": "low",
+        "rationale": "일상 업무용 스머펫과 분석용 똘똘이스머프에 각각 다른 페르소나·말투를 설계해 부여한 점이 완료 기준의 실질에 닿으나, soul.md 파일 기반 설정인지 확인되지 않아 low."
       }
     ]
   },
@@ -796,6 +861,11 @@
         "challengeTitle": "오픈클로 or 헤르메스 설치",
         "confidence": "high",
         "rationale": "detail이 Windows 사용자에게 권장하는 WSL2(우분투) 경로 그대로 Hermes Agent를 설치하고 봇을 구동해 '에이전트에게 질문을 던져 모델 응답을 1회 받으면 성공'이라는 출발점 과제의 완료 기준을 충족했다."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "medium",
+        "rationale": "WSL2로 설치한 Hermes 봇(청명)을 실제 대화로 운영한 기록이므로 텔레그램에서 답장을 받는 완료 기준은 운영 사실로 충족된다. 연결 과정 자체의 서술이 없어 medium."
       }
     ]
   },
@@ -812,6 +882,11 @@
         "challengeTitle": "텔레그램 연결 성공!",
         "confidence": "high",
         "rationale": "'지지'라는 텔레그램 봇을 만들어 연결하고 성격 설정까지 붙여 대화를 완료해 '폰 텔레그램에서 말을 걸어 답장을 받으면 성공'이라는 완료 기준에 부합한다."
+      },
+      {
+        "challengeTitle": "온보딩 — soul.md 설정",
+        "confidence": "medium",
+        "rationale": "제목 그대로 soul.md 설정까지 진행해 '지지'라는 이름·성격을 붙였고 그 페르소나로 대화를 완료했다. 페르소나가 대화에서 느껴지는 구체 장면 서술이 짧아 medium."
       }
     ]
   },
@@ -828,6 +903,16 @@
         "challengeTitle": "24시간 상시 운영 환경 만들기",
         "confidence": "high",
         "rationale": "detail이 제시한 '클라우드 VPS' 선택지 그대로 Contabo VPS에 Hermes를 구축해 텔레그램 비서를 상시 운영 중이므로, 내 컴퓨터 상태와 무관하게 봇이 응답하는 '컴퓨터를 꺼도(밤새) 봇이 응답' 완료 기준이 구조적으로 충족된다."
+      },
+      {
+        "challengeTitle": "오픈클로 or 헤르메스 설치",
+        "confidence": "medium",
+        "rationale": "제목 그대로 헤르메스로 시작한 구축기로 '모델 응답 1회 수신' 기준은 김실장 운영 사실로 충족된다. 설치 과정 세부 서술이 없어 medium."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "medium",
+        "rationale": "김실장을 텔레그램 비서로 실제 운영(Contabo VPS 상시 구동)하므로 폰에서 답장을 받는 완료 기준이 구조적으로 충족된다. 연결 장면 서술이 없어 medium."
       }
     ]
   },
@@ -848,8 +933,8 @@
     "assignments": [
       {
         "challengeTitle": "내 반복 업무 하나 자동화하기 (졸업 과제)",
-        "confidence": "high",
-        "rationale": "네이버 검색량 추적→엑셀 정리→아침 9시 메일 발송이라는 실제 회사 반복 업무의 자동화를 7시간 시행착오 끝에 완성해, detail의 핵심인 '전에는 내가 했고, 지금은 에이전트가 한다'를 명백히 시연했다."
+        "confidence": "medium",
+        "rationale": "네이버 검색량 추적→엑셀 정리→아침 9시 메일 발송이라는 실제 회사 반복 업무의 자동화를 7시간 시행착오 끝에 완성해 '전에는 내가 했고, 지금은 에이전트가 한다'는 취지를 시연하나, 실행 주체가 반려 에이전트가 아닌 launchd+Python 스크립트라는 점에서 부분 시연으로 조정한다."
       },
       {
         "challengeTitle": "크론잡 설정, 확인",
@@ -871,6 +956,11 @@
         "challengeTitle": "노션 연결하기",
         "confidence": "high",
         "rationale": "녹취록을 노션에 분류·구조화하고 결정사항·액션 아이템을 자동 기록해 '에이전트가 노션 페이지를 만들거나 갱신하면 성공'이라는 완료 기준을 충족했다. 노션 연결 과제 detail이 이 Tiro MCP 파이프라인을 22기 사례로 직접 인용하고 있어, 범용 'MCP 하나 연결해보기'보다 전용 과제인 노션 연결이 우선한다."
+      },
+      {
+        "challengeTitle": "MCP 하나 연결해보기",
+        "confidence": "high",
+        "rationale": "Tiro 공식 MCP 엔드포인트를 파이프라인의 핵심으로 연결·사용해 '연결한 MCP의 기능을 에이전트가 실제로 사용' 완료 기준을 명백히 충족하며, 과제 detail이 '회의 녹음 Tiro MCP'로 이 사례를 직접 예시로 인용한다. 노션 쓰기(전용 과제)와 별개로 MCP 연결 자체가 독립 증거로 성립한다."
       }
     ]
   },
@@ -887,6 +977,21 @@
         "challengeTitle": "무언가를 감시하는 봇 만들기",
         "confidence": "medium",
         "rationale": "크론과 브라우저 MCP로 정부 정책·입찰정보를 주기적으로 모니터링·수집하고 텔레그램으로 전달하는 구성이 '주기적으로 확인하고 변화 시 알림'이라는 과제에 부합하나, 변화 감지 알림 1회 이상의 명시적 확인은 요약상 간접적이다."
+      },
+      {
+        "challengeTitle": "크론잡 설정, 확인",
+        "confidence": "medium",
+        "rationale": "크론 기반으로 정부 정책·입찰정보를 주기 수집·보고하는 구성이 '등록한 크론잡이 정해진 시간에 실제 실행' 기준에 부합한다. 크론 등록 과정 자체의 서술이 부분적이라 medium."
+      },
+      {
+        "challengeTitle": "브라우저·화면 자동화",
+        "confidence": "medium",
+        "rationale": "브라우저 MCP로 웹의 정책·입찰정보를 수집해 '에이전트가 브라우저를 조작해 가져온 결과물' 완료 기준에 부합한다. 조작 방식 세부가 요약 수준이라 medium."
+      },
+      {
+        "challengeTitle": "24시간 상시 운영 환경 만들기",
+        "confidence": "low",
+        "rationale": "비서실장 업무를 상시 자동화로 돌린다는 구성상 상시 구동 환경이 전제되나, 환경 구축(절전 해제·전용 기기·VPS) 자체의 서술이 없어 low."
       }
     ]
   },
@@ -935,6 +1040,11 @@
         "challengeTitle": "온보딩 — soul.md 설정",
         "confidence": "medium",
         "rationale": "팀 사고 프레임워크를 에이전트에 입력해 이름(아롱이)·역할·작업 방식이 대화(질문·코칭)에서 느껴지게 만든 점이 '이름·말투·역할이 반영되어 대화에서 느껴지면 성공' 기준에 부합하지만, soul.md 파일 자체를 다뤘는지는 확인되지 않는 부분 시연이다."
+      },
+      {
+        "challengeTitle": "슬랙에 연결하기",
+        "confidence": "medium",
+        "rationale": "팀 협업 채널(슬랙)에 에이전트 아롱이를 연결해 회의 운영·자료 관리를 함께한 구성으로 '슬랙 채널에서 봇이 응답' 기준에 부합한다. 연결 과정 서술이 없어 medium."
       }
     ]
   },
@@ -1015,6 +1125,11 @@
         "challengeTitle": "오픈클로 or 헤르메스 설치",
         "confidence": "high",
         "rationale": "제목 그대로 Hermes Agent 설치부터 시작해 텔레그램 지시에 에이전트가 응답하는 상태까지 만들었으므로 '모델 응답을 1회 받으면 성공' 기준을 충족한다."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "high",
+        "rationale": "텔레그램 지시로 Gmail 검색·조회까지 수행하는 비서를 운영했으므로 폰 텔레그램에서 말을 걸어 답장을 받는 완료 기준을 실사용으로 명백히 충족한다."
       }
     ]
   },
@@ -1059,13 +1174,7 @@
   {
     "file": "ChatGPT에게 절대 만들지 마라고 했더니.md",
     "title": "ChatGPT에게 절대 만들지 마라고 했더니",
-    "assignments": [
-      {
-        "challengeTitle": "긴 작업 통째로 맡겨보기 (자율 실행)",
-        "confidence": "low",
-        "rationale": "\"명령보다 배경 설명이 중요합니다. 왜 필요한지, 어떤 결과를 원하는지 먼저 말해주세요\"라는 과제 핵심 팁을 실전에서 체득한 경험담이나, 3단계 이상 산출물 완주라는 완료 기준의 시연 여부는 불분명하고 도구도 반려 에이전트가 아닌 ChatGPT임."
-      }
-    ]
+    "assignments": []
   },
   {
     "file": "Claude OAuth로 직접 붙인 개인 AI 에이전트 유성이.md",
@@ -1155,6 +1264,11 @@
         "challengeTitle": "온보딩 — soul.md 설정",
         "confidence": "high",
         "rationale": "soul.md로 JAVIS의 성격을 정의해 나만의 개인화된 비서로 만든 점이 '이름·말투·역할이 soul.md에 반영되어 대화에서 느껴지면 성공'이라는 완료 기준을 시연한다. 메모리 기반 선호 학습('에이전트 기억 가꾸기' detail의 JAVIS 인용)도 등장하나, 제목과 본문의 중심축인 soul.md와 감시봇이 더 강한 매칭이다."
+      },
+      {
+        "challengeTitle": "에이전트 기억 가꾸기",
+        "confidence": "medium",
+        "rationale": "과제 detail이 22기 사례로 직접 인용하는 'JAVIS의 장기기억·선호 학습' 그 사례로, 메모리 기반 개인화를 운영했다. 새 대화에서 기억을 확인하는 완료 기준 장면이 글의 중심은 아니라 medium."
       }
     ]
   },
@@ -1230,6 +1344,11 @@
         "challengeTitle": "온보딩 — soul.md 설정",
         "confidence": "medium",
         "rationale": "SOUL.md로 '우주 동행자 Halo'라는 이름·역할의 페르소나를 정의한 점이 'soul.md에 이름·말투·역할을 반영'하는 완료 기준에 부합하나, 자기 에이전트가 아닌 아내의 봇을 위한 설정이다."
+      },
+      {
+        "challengeTitle": "텔레그램 연결 성공!",
+        "confidence": "medium",
+        "rationale": "아내의 Windows 노트북에 설치한 헤르메스를 텔레그램 봇(Halo)으로 연결해 대화까지 성립시켰으므로 완료 기준을 충족한다. 자기 봇이 아닌 타인 세팅 중심 서사라 medium."
       }
     ]
   },
@@ -1293,8 +1412,8 @@
     "assignments": [
       {
         "challengeTitle": "LLM-wiki 체계 만들기",
-        "confidence": "medium",
-        "rationale": "Obsidian에 원본 자료와 AI 정리 지식을 분리한 LLM Wiki 구조를 구축해 '지식 위키를 볼트 안에 구축' 취지에 부합하나, 도구가 Obsidian·NotebookLM 중심이라 반려 에이전트가 그 페이지를 스스로 참조·갱신하는 루프까지는 요약상 확인되지 않는 부분 시연이다. 같은 이유로 '옵시디언에 연결하기'(에이전트가 노트를 읽고 답하는 것)도 확증이 없어 추가하지 않는다."
+        "confidence": "low",
+        "rationale": "Obsidian에 원본 자료와 AI 정리 지식을 분리한 LLM Wiki 구조를 구축해 취지에 닿지만, 도구가 Obsidian·NotebookLM 중심이라 반려 에이전트가 그 페이지를 스스로 참조·갱신하는 루프가 확인되지 않아 low로 조정한다."
       }
     ]
   },
@@ -1360,6 +1479,11 @@
         "challengeTitle": "구글 캘린더 연결하기",
         "confidence": "medium",
         "rationale": "Google Cloud 인증으로 Google Calendar API를 연결해 에이전트가 실제 일정을 읽어 알림을 보내게 만들어, '에이전트가 내 일정을 읽는다'는 완료 기준을 부분 시연했다. MCP 범용 과제가 아닌 전용 과제로 매핑."
+      },
+      {
+        "challengeTitle": "칸반 기능 사용해보기 (헤르메스)",
+        "confidence": "low",
+        "rationale": "Javis/Hermes로 칸반 작업 관리 시스템을 구축했다고 명시(태그·키워드 일치)되어 과제 취지의 시연 자체는 확인되나, '두 개 이상의 작업을 상태 변화까지 관리'라는 완료 기준의 구체 증거가 요약 한 구절뿐이라 low."
       }
     ]
   },

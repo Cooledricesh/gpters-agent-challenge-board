@@ -205,6 +205,10 @@ export default async function HomePage() {
           순위는 완료 개수가 아니라 가중 점수가 높은 순으로 표시되며, 현재 만점은{" "}
           <strong>{formatWeightedScore(data.totalWeightedScore)}</strong>입니다.
         </p>
+        <p className="mt-2 text-xs leading-5">
+          이 트리는 다 깨는 트리가 아니라 <strong>내 가지를 골라 기르는 트리</strong>예요. T1은 첫 주
+          목표치일 뿐 마감이 아닙니다 — Windows(WSL2)라면 설치+텔레그램 연결만으로도 훌륭한 첫 주!
+        </p>
       </section>
 
       <section>

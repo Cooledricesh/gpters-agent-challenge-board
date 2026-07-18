@@ -33,13 +33,13 @@ describe("티어 가중치 (T1=1, T2=1.25, T3=1.5)", () => {
     expect(calculateWeightedScore([{ level: "advanced", tier: 1, completed: false }])).toBe(0);
   });
 
-  it("만점 계산: T1 10 + T2 21 + T3 15 = 58.75점 (23기 트리)", () => {
+  it("만점 계산: T1 12 + T2 23 + T3 14 = 61.75점 (23기 트리)", () => {
     const challenges = [
-      ...Array.from({ length: 10 }, () => ({ level: "basic" as const, tier: 1 })),
-      ...Array.from({ length: 21 }, () => ({ level: "advanced" as const, tier: 2 })),
-      ...Array.from({ length: 15 }, () => ({ level: "advanced" as const, tier: 3 })),
+      ...Array.from({ length: 12 }, () => ({ level: "basic" as const, tier: 1 })),
+      ...Array.from({ length: 23 }, () => ({ level: "advanced" as const, tier: 2 })),
+      ...Array.from({ length: 14 }, () => ({ level: "advanced" as const, tier: 3 })),
     ];
-    expect(calculateTotalWeightedScore(challenges)).toBe(58.75);
+    expect(calculateTotalWeightedScore(challenges)).toBe(61.75);
   });
 });
 
