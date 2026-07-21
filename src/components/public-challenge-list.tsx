@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 
 import { ProgressBar } from "@/components/board-ui";
 import ChallengeExamples from "@/components/challenge-examples";
@@ -162,6 +163,14 @@ function PublicChallengeModal({
             {challenge.completedCount}/{totalStudents}명 완료
           </p>
           <ChallengeExamples examples={challenge.examples} />
+        </div>
+        <div className="border-t border-zinc-100 p-4 dark:border-zinc-800">
+          <Link
+            href="/my"
+            className="flex w-full items-center justify-center rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            완료 체크하러 가기 →
+          </Link>
         </div>
       </div>
     </div>

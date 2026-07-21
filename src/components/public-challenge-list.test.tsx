@@ -56,6 +56,8 @@ describe("PublicChallengeList", () => {
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toContain("noopener");
     expect(within(dialog).getByText("by CAMI")).toBeTruthy();
+    const completionLink = within(dialog).getByRole("link", { name: "완료 체크하러 가기 →" });
+    expect(completionLink.getAttribute("href")).toBe("/my");
   });
 
   it("사례가 없으면 배지는 없고 모달에는 개척 과제 안내가 나온다", () => {
