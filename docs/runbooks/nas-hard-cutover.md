@@ -5,7 +5,7 @@
 ## Current recovery path
 
 - Application data backend: NAS only; no `DATA_BACKEND` selector exists.
-- Production deployment: `dpl_9oTRnd9i91QGuC47hCy342Hm5CCC`.
+- Production target: canonical alias `https://gpters-agent-challenge-board.vercel.app`; verify the live deployment ID at incident time because every `main` commit creates a new production deployment.
 - Final decommission backup: `gpters_challenge_board_20260818_140626.dump`.
 - Restore drill: PostgreSQL 17 isolated container, four table counts and UTC-normalized full-row hashes matched live exactly.
 - Incident recovery: pause mutations if necessary, run `dbctl check`, and restore from a verified PostgreSQL dump into an isolated target before any live recovery decision.

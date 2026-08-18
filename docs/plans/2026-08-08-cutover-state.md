@@ -17,7 +17,7 @@ Seunghyun explicitly approved preparing all prerequisites and executing the migr
 ## Current authority after cutover
 
 - Production backend: NAS read/write
-- Canonical production deployment: `dpl_9oTRnd9i91QGuC47hCy342Hm5CCC`
+- Canonical production target: `https://gpters-agent-challenge-board.vercel.app` (the immutable deployment ID is intentionally not pinned here because every `main` commit creates a new production deployment)
 - Current live counts: 46 users / 49 challenges / 184 examples / 573 completions
 - Application backend: NAS only; the selector, Supabase adapter/package/scripts, and Supabase Vercel/local environment variables were removed.
 - Supabase project `gpters_challenger_board` was deleted with explicit approval on 2026-08-18. PostgreSQL backup/restore is the only recovery path.
