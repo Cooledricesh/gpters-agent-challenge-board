@@ -5,9 +5,8 @@ beforeEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("data backend selection", () => {
-  it("uses one repository for both reads and writes", async () => {
-    vi.stubEnv("DATA_BACKEND", "nas");
+describe("NAS data repository", () => {
+  it("uses one NAS repository for both reads and writes", async () => {
     vi.stubEnv("NAS_API_BASE_URL", "https://nas.example.test");
     vi.stubEnv("NAS_API_SERVICE_TOKEN", "test-token");
     const data = await import("./index");

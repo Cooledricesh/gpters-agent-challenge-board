@@ -54,7 +54,7 @@ export function shouldFallbackToLegacyChallengeShape(error: { message?: string; 
   );
 }
 
-/** backend-neutral ordered challenge loader. Legacy Supabase fallback is contained in its adapter. */
+/** Load ordered challenges from the authoritative repository. */
 export async function loadChallengesOrdered(
   repository: Pick<DataRepository, "listChallenges">,
 ): Promise<{ data: ChallengeRowWithLevel[]; error: Error | null; usedLegacyFallback: boolean }> {

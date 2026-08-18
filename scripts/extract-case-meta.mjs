@@ -12,8 +12,9 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { homedir } from "node:os";
 
-import { REPO_ROOT } from "./lib/cohort-data.mjs";
 import { parseCaseNote } from "./lib/case-note.mjs";
+
+const REPO_ROOT = resolve(import.meta.dirname, "..");
 
 const DEFAULT_DIR = join(
   homedir(),

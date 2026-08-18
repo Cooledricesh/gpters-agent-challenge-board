@@ -1,7 +1,5 @@
 import type { ChallengeAreaKey, ChallengeLevel, ChallengeTier } from "@/lib/challenges";
 
-export type DataBackend = "supabase" | "nas";
-
 export interface StudentDataRow {
   id: string;
   nickname: string;

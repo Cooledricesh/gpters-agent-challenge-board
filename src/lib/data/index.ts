@@ -2,23 +2,13 @@ import "server-only";
 
 import { serverEnv } from "@/lib/env";
 import { NasRepository } from "./nas-repository";
-import { SupabaseRepository } from "./supabase-repository";
-import type { DataBackend, DataRepository } from "./types";
-
-export function createDataRepository(backend: DataBackend): DataRepository {
-  return backend === "nas" ? new NasRepository() : new SupabaseRepository();
-}
+import type { DataRepository } from "./types";
 
 let singleton: DataRepository | undefined;
-let singletonBackend: DataBackend | undefined;
 
-/** Reads and writes always use the same authoritative backend. */
+/** Reads and writes always use the NAS API as the sole authoritative backend. */
 export function getDataRepository(): DataRepository {
-  const backend = serverEnv.dataBackend;
-  if (!singleton || singletonBackend !== backend) {
-    singleton = createDataRepository(backend);
-    singletonBackend = backend;
-  }
+  singleton ??= new NasRepository();
   return singleton;
 }
 
@@ -37,7 +27,6 @@ export function isMutationsPausedError(error: unknown): boolean {
 export type {
   CompletionDataRow,
   CreateChallengeInput,
-  DataBackend,
   DataRepository,
   ExampleDataRow,
   StudentDataRow,

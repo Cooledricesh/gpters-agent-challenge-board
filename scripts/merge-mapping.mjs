@@ -12,8 +12,7 @@
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { REPO_ROOT } from "./lib/cohort-data.mjs";
-
+const REPO_ROOT = resolve(import.meta.dirname, "..");
 const dataDir = resolve(REPO_ROOT, "scripts", "data");
 
 function readJson(path) {
@@ -24,8 +23,6 @@ function main() {
   const challenges = readJson(resolve(dataDir, "challenges.json"));
   const meta = readJson(resolve(dataDir, "case-meta.json"));
   const validTitles = new Set(challenges.map((c) => c.title));
-  const metaByFile = new Map(meta.map((m) => [m.file, m]));
-
   // 파트 병합.
   const partsDir = resolve(dataDir, "case-map-parts");
   const partFiles = readdirSync(partsDir)
