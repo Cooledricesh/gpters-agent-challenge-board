@@ -6,10 +6,13 @@
 
 - Application data backend: NAS only; no `DATA_BACKEND` selector exists.
 - Production target: canonical alias `https://gpters-agent-challenge-board.vercel.app`; verify the live deployment ID at incident time because every `main` commit creates a new production deployment.
+- Primary NAS API origin: `https://gpters-api.rebridge.work` through Cloudflare Tunnel.
+- Retained ingress rollback value: `https://baclava-nas.tailb06fb8.ts.net/gpters-api`. This is an ingress rollback only; the database authority remains the same NAS PostgreSQL database.
 - Final decommission backup: `gpters_challenge_board_20260818_140626.dump`.
 - Restore drill: PostgreSQL 17 isolated container, four table counts and UTC-normalized full-row hashes matched live exactly.
 - Incident recovery: pause mutations if necessary, run `dbctl check`, and restore from a verified PostgreSQL dump into an isolated target before any live recovery decision.
 - Supabase rollback is unavailable because the project has been decommissioned.
+- Ingress incident: if Cloudflare fails, set the Vercel server-only base URL back to the retained Funnel value, redeploy, and require canonical 200 plus matching NAS logs. Do not introduce an external database fallback.
 
 ## Historical cutover procedure
 
