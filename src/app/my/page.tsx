@@ -8,7 +8,7 @@
 import { redirect } from "next/navigation";
 
 import { requireSession } from "@/lib/session";
-import { getSupabaseServiceClient } from "@/lib/supabase";
+import { getDataRepository } from "@/lib/data";
 import {
   formatWeightedScore,
   getMotivationalMessage,
@@ -27,26 +27,26 @@ export default async function MyPage() {
   const session = await requireSession("student");
   if (!session) redirect("/login");
 
-  const client = getSupabaseServiceClient();
+  const repository = getDataRepository();
   const [
-    { data: challengeRows, error: chErr },
-    { data: myCompletions, error: myCoErr },
-    { data: allCompletions, error: allCoErr },
+    { data: challengeRows, error: challengeError },
+    myCompletions,
+    allCompletions,
     allStudents,
     examplesByChallenge,
   ] = await Promise.all([
-    loadChallengesOrdered(client),
-    client.from("completions").select("challenge_id").eq("user_id", session.sub),
-    client.from("completions").select("challenge_id"),
-    loadAllStudentProgress(client),
-    loadExamplesByChallenge(client),
+    loadChallengesOrdered(repository),
+    repository.listCompletions(session.sub),
+    repository.listCompletions(),
+    loadAllStudentProgress(repository),
+    loadExamplesByChallenge(repository),
   ]);
 
-  if (chErr || myCoErr || allCoErr) {
+  if (challengeError) {
     return (
       <section className="py-12 text-center">
         <p className="text-sm text-red-600">
-          데이터 로드 실패: {chErr?.message ?? myCoErr?.message ?? allCoErr?.message}
+          데이터 로드 실패: {challengeError.message}
         </p>
       </section>
     );

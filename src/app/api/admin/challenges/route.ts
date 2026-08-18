@@ -9,7 +9,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireSession } from "@/lib/session";
-import { getSupabaseServiceClient } from "@/lib/supabase";
+import {
+  getDataRepository,
+  isMutationsPausedError,
+  requireMutationsEnabled,
+} from "@/lib/data";
 import {
   normalizeChallengeArea,
   normalizeChallengeLevel,
@@ -56,7 +60,7 @@ function schemaUpdateRequiredResponse(message: string) {
     {
       ok: false,
       error: isMissingLevel || isMissingDetail || isMissingArea
-        ? "Supabase SQL Editor에서 최신 supabase/schema.sql을 먼저 실행해주세요."
+        ? "선택한 데이터 backend에 최신 schema를 먼저 적용해주세요."
         : message,
     },
     { status: 500 },
@@ -82,37 +86,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "잘못된 입력입니다." }, { status: 400 });
   }
 
-  const client = getSupabaseServiceClient();
-  // 최대 order_index + 1
-  const { data: maxRow, error: maxErr } = await client
-    .from("challenges")
-    .select("order_index")
-    .order("order_index", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (maxErr) {
-    return NextResponse.json({ ok: false, error: maxErr.message }, { status: 500 });
-  }
-  const nextOrder = (maxRow?.order_index ?? 0) + 1;
-
   const level = normalizeChallengeLevel(parsed.level);
   const area = normalizeChallengeArea(parsed.area);
-  const { data, error } = await client
-    .from("challenges")
-    .insert({
+  try {
+    requireMutationsEnabled();
+    const data = await getDataRepository().createChallenge({
       title: parsed.title,
       description: parsed.description ?? null,
       detail: parsed.detail ?? null,
-      order_index: nextOrder,
       level,
       area,
-    })
-    .select("id, title, order_index, level, detail, area")
-    .single();
-  if (error || !data) {
-    return schemaUpdateRequiredResponse(error?.message ?? "등록 실패");
+    });
+    return NextResponse.json({ ok: true, challenge: data });
+  } catch (error) {
+    if (isMutationsPausedError(error)) {
+      return NextResponse.json({ ok: false, error: "데이터 전환 점검 중입니다. 잠시 후 다시 시도해주세요." }, { status: 503 });
+    }
+    const message = error instanceof Error ? error.message : "등록 실패";
+    return schemaUpdateRequiredResponse(message);
   }
-  return NextResponse.json({ ok: true, challenge: data });
 }
 
 export async function PATCH(request: Request) {
@@ -126,7 +118,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: false, error: "챌린지 수정값을 확인해주세요." }, { status: 400 });
   }
 
-  const client = getSupabaseServiceClient();
   const update =
     parsed.title !== undefined
       ? normalizeChallengeUpdateInput({
@@ -141,16 +132,18 @@ export async function PATCH(request: Request) {
           ...(parsed.area !== undefined ? { area: normalizeChallengeArea(parsed.area) } : {}),
         };
 
-  const { data, error } = await client
-    .from("challenges")
-    .update(update)
-    .eq("id", parsed.id)
-    .select("id, title, description, detail, level, area")
-    .maybeSingle();
-
-  if (error) return schemaUpdateRequiredResponse(error.message);
-  if (!data) {
-    return NextResponse.json({ ok: false, error: "챌린지를 찾을 수 없습니다." }, { status: 404 });
+  try {
+    requireMutationsEnabled();
+    const data = await getDataRepository().updateChallenge({ id: parsed.id, ...update });
+    if (!data) {
+      return NextResponse.json({ ok: false, error: "챌린지를 찾을 수 없습니다." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, challenge: data });
+  } catch (error) {
+    if (isMutationsPausedError(error)) {
+      return NextResponse.json({ ok: false, error: "데이터 전환 점검 중입니다. 잠시 후 다시 시도해주세요." }, { status: 503 });
+    }
+    const message = error instanceof Error ? error.message : "수정 실패";
+    return schemaUpdateRequiredResponse(message);
   }
-  return NextResponse.json({ ok: true, challenge: data });
 }

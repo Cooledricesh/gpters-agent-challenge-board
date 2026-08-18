@@ -11,8 +11,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import {
+  getDataRepository,
+  isMutationsPausedError,
+  requireMutationsEnabled,
+} from "@/lib/data";
 import { requireSession } from "@/lib/session";
-import { getSupabaseServiceClient } from "@/lib/supabase";
 
 const Body = z.object({
   challengeId: z.string().uuid(),
@@ -31,30 +35,24 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ ok: false, error: "잘못된 입력입니다." }, { status: 400 });
   }
-  const { challengeId, done } = parsed;
-  const client = getSupabaseServiceClient();
 
-  if (done) {
-    // upsert via unique(user_id, challenge_id) — 중복 시 ignore.
-    const { error } = await client
-      .from("completions")
-      .upsert(
-        { user_id: session.sub, challenge_id: challengeId },
-        { onConflict: "user_id,challenge_id", ignoreDuplicates: true },
+  try {
+    requireMutationsEnabled();
+    await getDataRepository().toggleCompletion({
+      userId: session.sub,
+      challengeId: parsed.challengeId,
+      done: parsed.done,
+    });
+  } catch (error) {
+    if (isMutationsPausedError(error)) {
+      return NextResponse.json(
+        { ok: false, error: "데이터 이전 점검 중입니다. 잠시 후 다시 시도해주세요." },
+        { status: 503 },
       );
-    if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
-  } else {
-    const { error } = await client
-      .from("completions")
-      .delete()
-      .eq("user_id", session.sub)
-      .eq("challenge_id", challengeId);
-    if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-    }
+    const message = error instanceof Error ? error.message : "completion_update_failed";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, done });
+  return NextResponse.json({ ok: true, done: parsed.done });
 }

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-// @ts-expect-error — .mjs 스크립트 헬퍼(타입 선언 없음). Vite가 ESM으로 로드.
 import { parseCaseNote, splitFrontmatter, section, listField } from "./case-note.mjs";
 
 const SAMPLE = `---
@@ -34,6 +33,7 @@ describe("parseCaseNote", () => {
   it("frontmatter와 본문 섹션을 구조화한다", () => {
     const note = parseCaseNote(SAMPLE, "오픈클로 설치 텔레그램 연결 범블비.md");
     expect(note).not.toBeNull();
+    if (!note) throw new Error("expected a parsed case note");
     expect(note.title).toBe("오픈클로 설치 텔레그램 연결 범블비");
     expect(note.summary).toBe("OpenClaw 설치·텔레그램 연결로 첫 AI 에이전트 제작.");
     expect(note.tools).toEqual(["OpenClaw", "Telegram"]);

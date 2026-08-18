@@ -1,5 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
+import type { DataRepository } from "@/lib/data/types";
 import {
   normalizeChallengeArea,
   normalizeChallengeLevel,
@@ -17,13 +16,11 @@ export interface ChallengeRowWithLevel {
   order_index: number;
   level: ChallengeLevel;
   area: ChallengeAreaKey | null;
-  /** 23기 기술트리 티어. 컬럼 없는 구버전 DB에서는 1로 폴백. */
   tier: ChallengeTier;
-  /** 단일 선행과제 id. 뿌리(또는 구버전 DB)는 null. */
   prerequisite_id: string | null;
 }
 
-interface RawChallengeRow {
+export interface RawChallengeRow {
   id: string;
   title: string;
   description: string | null;
@@ -35,7 +32,7 @@ interface RawChallengeRow {
   prerequisite_id?: string | null;
 }
 
-function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
+export function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
   const level = normalizeChallengeLevel(row.level);
   return {
     id: row.id,
@@ -45,99 +42,29 @@ function mapChallenge(row: RawChallengeRow): ChallengeRowWithLevel {
     order_index: row.order_index,
     level,
     area: normalizeChallengeArea(row.area),
-    // tier 컬럼이 없는 구버전 DB에서는 level에서 파생해 가중치(1/1.25)를 보존한다.
     tier: row.tier != null ? normalizeChallengeTier(row.tier) : level === "advanced" ? 2 : 1,
     prerequisite_id: row.prerequisite_id ?? null,
   };
 }
 
-function shouldFallbackToLegacyChallengeShape(error: { message?: string; code?: string }): boolean {
+export function shouldFallbackToLegacyChallengeShape(error: { message?: string; code?: string }): boolean {
   const message = error.message ?? "";
-  return (
-    message.includes("level") ||
-    message.includes("detail") ||
-    message.includes("area") ||
-    message.includes("tier") ||
-    message.includes("prerequisite_id") ||
-    message.includes("schema cache")
+  return ["level", "detail", "area", "tier", "prerequisite_id", "schema cache"].some((value) =>
+    message.includes(value),
   );
 }
 
-/**
- * 챌린지를 (tier, order_index, created_at) 순으로 로드한다.
- * 신규 컬럼(tier/prerequisite_id)이 없는 DB에서는 단계적으로 폴백한다.
- */
+/** backend-neutral ordered challenge loader. Legacy Supabase fallback is contained in its adapter. */
 export async function loadChallengesOrdered(
-  client: SupabaseClient,
+  repository: Pick<DataRepository, "listChallenges">,
 ): Promise<{ data: ChallengeRowWithLevel[]; error: Error | null; usedLegacyFallback: boolean }> {
-  const withTree = await client
-    .from("challenges")
-    .select("id, title, description, detail, order_index, level, area, tier, prerequisite_id")
-    .order("tier", { ascending: true })
-    .order("order_index", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (!withTree.error) {
+  try {
+    return { data: await repository.listChallenges(), error: null, usedLegacyFallback: false };
+  } catch (error) {
     return {
-      data: ((withTree.data ?? []) as RawChallengeRow[]).map(mapChallenge),
-      error: null,
+      data: [],
+      error: error instanceof Error ? error : new Error("challenge_load_failed"),
       usedLegacyFallback: false,
     };
   }
-
-  if (!shouldFallbackToLegacyChallengeShape(withTree.error)) {
-    return { data: [], error: withTree.error, usedLegacyFallback: false };
-  }
-
-  const withDetail = await client
-    .from("challenges")
-    .select("id, title, description, detail, order_index, level, area")
-    .order("order_index", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (!withDetail.error) {
-    return {
-      data: ((withDetail.data ?? []) as RawChallengeRow[]).map(mapChallenge),
-      error: null,
-      usedLegacyFallback: true,
-    };
-  }
-
-  if (!shouldFallbackToLegacyChallengeShape(withDetail.error)) {
-    return { data: [], error: withDetail.error, usedLegacyFallback: true };
-  }
-
-  const withoutDetail = await client
-    .from("challenges")
-    .select("id, title, description, detail, order_index, level")
-    .order("order_index", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (!withoutDetail.error) {
-    return {
-      data: ((withoutDetail.data ?? []) as RawChallengeRow[]).map(mapChallenge),
-      error: null,
-      usedLegacyFallback: true,
-    };
-  }
-
-  if (!shouldFallbackToLegacyChallengeShape(withoutDetail.error)) {
-    return { data: [], error: withoutDetail.error, usedLegacyFallback: true };
-  }
-
-  const legacy = await client
-    .from("challenges")
-    .select("id, title, description, order_index")
-    .order("order_index", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (legacy.error) {
-    return { data: [], error: legacy.error, usedLegacyFallback: true };
-  }
-
-  return {
-    data: ((legacy.data ?? []) as RawChallengeRow[]).map((row) => mapChallenge({ ...row, level: "basic" })),
-    error: null,
-    usedLegacyFallback: true,
-  };
 }

@@ -1,13 +1,13 @@
 /**
  * 공개 페이지 — 닉네임 노출 금지, 익명 라벨 + 가중 점수 높은 순.
  *
- * 데이터 소스: Supabase service client (RLS 우회). 익명 정보만 추출.
+ * 데이터 소스: server-side repository adapter. 익명 정보만 추출.
  * SSR: 매 요청마다 최신 진척도. 캐시 안 함.
  */
 
 import { getCurrentSession } from "@/lib/session";
 import Link from "next/link";
-import { getSupabaseServiceClient } from "@/lib/supabase";
+import { getDataRepository } from "@/lib/data";
 import { StatsCard, ProgressBar } from "@/components/board-ui";
 import { countCompletionsByChallenge, sortChallengesByCompletionCount } from "@/lib/challenge-insights";
 import { loadChallengesOrdered } from "@/lib/load-challenges";
@@ -51,21 +51,20 @@ interface PublicChallenge {
 
 async function loadPublicData(): Promise<{ data: PublicData | null; error: string | null }> {
   try {
-    const client = getSupabaseServiceClient();
+    const repository = getDataRepository();
     const session = await getCurrentSession();
     const [
       { data: challenges, error: challengeError },
-      { data: completions, error: coErr },
+      completions,
       students,
       examplesByChallenge,
     ] = await Promise.all([
-      loadChallengesOrdered(client),
-      client.from("completions").select("challenge_id"),
-      loadAllStudentProgress(client),
-      loadExamplesByChallenge(client),
+      loadChallengesOrdered(repository),
+      repository.listCompletions(),
+      loadAllStudentProgress(repository),
+      loadExamplesByChallenge(repository),
     ]);
     if (challengeError) throw challengeError;
-    if (coErr) throw coErr;
 
     const participants = toPublicView(students);
     const totalStudents = students.length;
@@ -126,7 +125,7 @@ export default async function HomePage() {
       <section className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
         <h1 className="text-2xl font-semibold">지피터스 반려 에이전트 챌린지 보드</h1>
         <p className="text-sm text-zinc-500">
-          데이터를 불러오지 못했습니다. Supabase 환경변수와 schema 적용 여부를 확인하세요.
+          데이터를 불러오지 못했습니다. 데이터 backend 환경변수와 schema 적용 여부를 확인하세요.
         </p>
         <pre className="max-w-md whitespace-pre-wrap rounded bg-zinc-100 p-3 text-left text-xs text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
           {error ?? "no data"}

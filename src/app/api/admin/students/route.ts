@@ -12,9 +12,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireSession } from "@/lib/session";
-import { getSupabaseServiceClient } from "@/lib/supabase";
+import {
+  getDataRepository,
+  isMutationsPausedError,
+  requireMutationsEnabled,
+} from "@/lib/data";
 import { hashPassword } from "@/lib/auth";
-import { makeAnonymousLabel, nextAnonymousIndex } from "@/lib/progress";
 
 const CreateBody = z.object({
   nickname: z.string().min(1).max(64),
@@ -53,56 +56,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "닉네임 'admin'은 예약어입니다." }, { status: 400 });
   }
 
-  const client = getSupabaseServiceClient();
-
-  const { data: dup } = await client
-    .from("app_users")
-    .select("id")
-    .eq("nickname", nickname)
-    .maybeSingle();
-  if (dup) {
-    return NextResponse.json({ ok: false, error: "이미 사용 중인 닉네임입니다." }, { status: 409 });
-  }
-
-  const { data: indexRows, error: idxErr } = await client
-    .from("app_users")
-    .select("anonymous_index")
-    .eq("role", "student");
-  if (idxErr) {
-    return NextResponse.json({ ok: false, error: idxErr.message }, { status: 500 });
-  }
-  const nextIdx = nextAnonymousIndex(
-    ((indexRows ?? []) as { anonymous_index: number | null }[]).map((r) => r.anonymous_index),
-  );
-  const anonymousLabel = makeAnonymousLabel(nextIdx);
   const passwordHash = await hashPassword(parsed.password);
-
-  const { data, error } = await client
-    .from("app_users")
-    .insert({
-      nickname,
-      role: "student",
-      password_hash: passwordHash,
-      anonymous_index: nextIdx,
-      anonymous_label: anonymousLabel,
-    })
-    .select("id, nickname, anonymous_label, anonymous_index")
-    .single();
-  if (error || !data) {
-    return NextResponse.json(
-      { ok: false, error: error?.message ?? "등록 실패" },
-      { status: 500 },
-    );
+  try {
+    requireMutationsEnabled();
+    const data = await getDataRepository().createStudent({ nickname, passwordHash });
+    return NextResponse.json({
+      ok: true,
+      student: {
+        id: data.id,
+        nickname: data.nickname,
+        anonymousLabel: data.anonymous_label,
+        anonymousIndex: data.anonymous_index,
+      },
+    });
+  } catch (error) {
+    if (isMutationsPausedError(error)) {
+      return NextResponse.json({ ok: false, error: "데이터 전환 점검 중입니다. 잠시 후 다시 시도해주세요." }, { status: 503 });
+    }
+    const code = (error as { code?: string }).code;
+    if (code === "nickname_conflict" || (error as { status?: number }).status === 409) {
+      return NextResponse.json({ ok: false, error: "이미 사용 중인 닉네임입니다." }, { status: 409 });
+    }
+    const message = error instanceof Error ? error.message : "등록 실패";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-  return NextResponse.json({
-    ok: true,
-    student: {
-      id: data.id,
-      nickname: data.nickname,
-      anonymousLabel: data.anonymous_label,
-      anonymousIndex: data.anonymous_index,
-    },
-  });
 }
 
 export async function PATCH(request: Request) {
@@ -116,23 +93,21 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: false, error: "수강생과 새 비밀번호를 확인해주세요." }, { status: 400 });
   }
 
-  const client = getSupabaseServiceClient();
   const passwordHash = await hashPassword(parsed.password);
-  const { data, error } = await client
-    .from("app_users")
-    .update({ password_hash: passwordHash })
-    .eq("id", parsed.id)
-    .eq("role", "student")
-    .select("id, nickname")
-    .maybeSingle();
-
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  try {
+    requireMutationsEnabled();
+    const data = await getDataRepository().updateStudentPassword({ id: parsed.id, passwordHash });
+    if (!data) {
+      return NextResponse.json({ ok: false, error: "수강생을 찾을 수 없습니다." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, student: data });
+  } catch (error) {
+    if (isMutationsPausedError(error)) {
+      return NextResponse.json({ ok: false, error: "데이터 전환 점검 중입니다. 잠시 후 다시 시도해주세요." }, { status: 503 });
+    }
+    const message = error instanceof Error ? error.message : "수정 실패";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-  if (!data) {
-    return NextResponse.json({ ok: false, error: "수강생을 찾을 수 없습니다." }, { status: 404 });
-  }
-  return NextResponse.json({ ok: true, student: data });
 }
 
 export async function DELETE(request: Request) {
@@ -146,20 +121,18 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ ok: false, error: "삭제할 수강생을 확인해주세요." }, { status: 400 });
   }
 
-  const client = getSupabaseServiceClient();
-  const { data, error } = await client
-    .from("app_users")
-    .delete()
-    .eq("id", parsed.id)
-    .eq("role", "student")
-    .select("id, nickname")
-    .maybeSingle();
-
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  try {
+    requireMutationsEnabled();
+    const data = await getDataRepository().deleteStudent(parsed.id);
+    if (!data) {
+      return NextResponse.json({ ok: false, error: "수강생을 찾을 수 없습니다." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, student: data });
+  } catch (error) {
+    if (isMutationsPausedError(error)) {
+      return NextResponse.json({ ok: false, error: "데이터 전환 점검 중입니다. 잠시 후 다시 시도해주세요." }, { status: 503 });
+    }
+    const message = error instanceof Error ? error.message : "삭제 실패";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-  if (!data) {
-    return NextResponse.json({ ok: false, error: "수강생을 찾을 수 없습니다." }, { status: 404 });
-  }
-  return NextResponse.json({ ok: true, student: data });
 }

@@ -51,9 +51,14 @@ export function loadEnvLocal() {
   return env;
 }
 
-/** 서비스 롤 클라이언트 생성(RLS 우회). 스크립트 전용. */
+/** Supabase 전용 cohort 스크립트 클라이언트. NAS 전환 후에는 fail-closed. */
 export function makeServiceClient() {
   const env = loadEnvLocal();
+  const dataBackend = process.env.DATA_BACKEND ?? env.DATA_BACKEND ?? "supabase";
+  if (dataBackend !== "supabase") {
+    throw new Error(`cohort scripts are disabled for DATA_BACKEND=${dataBackend}`);
+  }
+
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {

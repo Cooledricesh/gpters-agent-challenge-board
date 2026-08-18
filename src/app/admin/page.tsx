@@ -8,7 +8,7 @@
 import { redirect } from "next/navigation";
 
 import { requireSession } from "@/lib/session";
-import { getSupabaseServiceClient } from "@/lib/supabase";
+import { getDataRepository } from "@/lib/data";
 import { loadAllStudentProgress, toAdminView } from "@/lib/stats";
 import {
   challengeAreaLabel,
@@ -30,18 +30,18 @@ export default async function AdminPage() {
   const session = await requireSession("admin");
   if (!session) redirect("/login");
 
-  const client = getSupabaseServiceClient();
-  const [students, { data: challengeRows, error: chErr }, { data: completions, error: coErr }] =
+  const repository = getDataRepository();
+  const [students, { data: challengeRows, error: challengeError }, completions] =
     await Promise.all([
-      loadAllStudentProgress(client),
-      loadChallengesOrdered(client),
-      client.from("completions").select("user_id, challenge_id"),
+      loadAllStudentProgress(repository),
+      loadChallengesOrdered(repository),
+      repository.listCompletions(),
     ]);
 
-  if (chErr || coErr) {
+  if (challengeError) {
     return (
       <section className="py-12 text-center">
-        <p className="text-sm text-red-600">데이터 로드 실패: {chErr?.message ?? coErr?.message}</p>
+        <p className="text-sm text-red-600">데이터 로드 실패: {challengeError.message}</p>
       </section>
     );
   }

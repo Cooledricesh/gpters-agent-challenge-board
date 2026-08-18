@@ -2,14 +2,14 @@
  * stats.ts — DB 결과를 도메인 객체로 모으는 헬퍼.
  *
  * 데이터 흐름:
- *   1. Supabase에서 app_users / challenges / completions 조회
+ *   1. repository에서 users / challenges / completions 조회
  *   2. challengeCount + per-user completionCount/weightedScore 계산
  *   3. progress.ts의 정렬·라벨 헬퍼로 공개·관리자 뷰 생성
  *
- * 이 모듈은 supabase 클라이언트를 직접 만들지 않는다. 호출자가 주입한다(테스트 용이).
+ * 이 모듈은 backend client를 직접 만들지 않는다. repository를 주입한다(테스트 용이).
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataRepository } from "./data/types";
 
 import {
   calculateProgressPercent,
@@ -50,27 +50,18 @@ interface CompletionRow {
 
 /**
  * 모든 수강생의 진행률을 한 번에 집계한다.
- * Supabase 호출 3회(users, challenges, completions). 결과는 클라이언트가 즉시 정렬 가능.
+ * repository 호출 3회(users, challenges, completions). 결과는 클라이언트가 즉시 정렬 가능.
  */
 export async function loadAllStudentProgress(
-  client: SupabaseClient,
+  repository: Pick<DataRepository, "listStudents" | "listChallenges" | "listCompletions">,
 ): Promise<StudentRow[]> {
-  const [
-    { data: users, error: usersError },
-    challengeResult,
-    { data: completions, error: completionError },
-  ] = await Promise.all([
-    client
-      .from("app_users")
-      .select("id, nickname, role, anonymous_label, anonymous_index")
-      .eq("role", "student"),
-    loadChallengesOrdered(client),
-    client.from("completions").select("user_id, challenge_id"),
+  const [users, challengeResult, completions] = await Promise.all([
+    repository.listStudents(),
+    loadChallengesOrdered(repository),
+    repository.listCompletions(),
   ]);
 
-  if (usersError) throw usersError;
   if (challengeResult.error) throw challengeResult.error;
-  if (completionError) throw completionError;
 
   const challenges = challengeResult.data;
   const total = challenges.length;

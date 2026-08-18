@@ -1,0 +1,26 @@
+services:
+  api:
+    image: gpters-challenge-board-api:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gpters-challenge-board-api
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - /volume1/docker/postgres-platform/credentials/gpters_challenge_board.env
+      - /volume1/docker/gpters-challenge-board/secrets/api.env
+    environment:
+      API_HOST: 127.0.0.1
+      API_PORT: 18887
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
