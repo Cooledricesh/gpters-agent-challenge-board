@@ -1,6 +1,6 @@
 # GPTERS Supabase → NAS cutover state
 
-Updated: 2026-08-08 03:08 KST
+Updated: 2026-08-18 14:25 KST
 Approved execution: 2026-08-08 03:00 KST
 Final preflight: 2026-08-08 02:40 KST
 Preflight job: `137c5acbdbbe`
@@ -17,10 +17,20 @@ Seunghyun explicitly approved preparing all prerequisites and executing the migr
 ## Current authority after cutover
 
 - Production backend: NAS read/write
-- Canonical production deployment: `dpl_G2dCsgyBbftFMf2o5VkKsQtGVvgn`
-- Final canonical counts: 48 users / 49 challenges / 184 examples / 507 completions
-- Stored Vercel Production selectors: `DATA_BACKEND=nas`, `MUTATIONS_PAUSED=false`
-- Supabase remains intact and inactive as the rollback anchor; it was not deleted or modified after the freeze snapshot.
+- Canonical production deployment: `dpl_9oTRnd9i91QGuC47hCy342Hm5CCC`
+- Current live counts: 46 users / 49 challenges / 184 examples / 573 completions
+- Application backend: NAS only; the selector, Supabase adapter/package/scripts, and Supabase Vercel/local environment variables were removed.
+- Supabase project `gpters_challenger_board` was deleted with explicit approval on 2026-08-18. PostgreSQL backup/restore is the only recovery path.
+
+## Verified decommission — 2026-08-18
+
+- Backup `gpters_challenge_board_20260818_140626.dump` passed archive validation.
+- Isolated PostgreSQL 17 restore reproduced all four live table counts and UTC-normalized full-row hashes exactly.
+- GitHub `main` contains NAS-only commit `49c16e8647b3aaa54b7d3a10b40638d391426b42`.
+- Tests `70/70`, lint, production build, and production dependency audit (`0` vulnerabilities) passed.
+- Vercel Production/Preview Supabase variables and legacy backend/write selectors were removed.
+- Canonical root and login returned 200 before and after Supabase deletion; NAS API logged `GET /v1/board` 200; container remained healthy with restart count 0.
+- Supabase CLI confirmed deletion and the old project endpoint no longer resolved.
 
 ## Verified execution — 2026-08-08
 

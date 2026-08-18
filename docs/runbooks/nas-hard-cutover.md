@@ -1,5 +1,18 @@
 # NAS hard cutover runbook
 
+> **Retired migration procedure.** The cutover completed on 2026-08-08 and the Supabase project was deleted with explicit approval on 2026-08-18 after a verified PostgreSQL backup and isolated restore drill. Production now has one backend only: NAS API → NAS PostgreSQL. The former Supabase rollback steps below are retained as historical execution evidence and must not be run.
+
+## Current recovery path
+
+- Application data backend: NAS only; no `DATA_BACKEND` selector exists.
+- Production deployment: `dpl_9oTRnd9i91QGuC47hCy342Hm5CCC`.
+- Final decommission backup: `gpters_challenge_board_20260818_140626.dump`.
+- Restore drill: PostgreSQL 17 isolated container, four table counts and UTC-normalized full-row hashes matched live exactly.
+- Incident recovery: pause mutations if necessary, run `dbctl check`, and restore from a verified PostgreSQL dump into an isolated target before any live recovery decision.
+- Supabase rollback is unavailable because the project has been decommissioned.
+
+## Historical cutover procedure
+
 This is a short maintenance-window migration for a very low-traffic service. It does not use dual writes, mirror workers, journals, replay, or split read/write modes.
 
 ## Preconditions
