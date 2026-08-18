@@ -1,5 +1,7 @@
 # Supabase → NAS 이전 현재 상태
 
+> **Historical cutover execution record.** Values below describe the 2026-08-08 migration window and are not current deployment, database-fallback, or ingress instructions. Current production is NAS-only with Cloudflare primary at `https://gpters-api.rebridge.work`; the Funnel path is retained only for ingress rollback. Use `docs/plans/2026-08-08-cutover-state.md` for current state.
+
 Updated: 2026-08-08 03:08 KST
 
 ## 현재 production

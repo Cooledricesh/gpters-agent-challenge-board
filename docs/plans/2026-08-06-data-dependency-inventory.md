@@ -1,5 +1,7 @@
 # Data dependency inventory
 
+> **Historical pre-cutover inventory.** This file preserves the 2026-08-06 migration assumptions and is not the current runtime contract. Production is NAS-only and uses `https://gpters-api.rebridge.work` through Cloudflare Tunnel; the Funnel path is rollback-only. Use `docs/setup.md` and `docs/runbooks/nas-hard-cutover.md` for current operations.
+
 ## Runtime selection
 
 | Variable | Default | Cutover value | Purpose |

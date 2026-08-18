@@ -1,5 +1,7 @@
 # Funnel Path Preparation and Rollback
 
+> **Retired preparation procedure. Do not execute for current production onboarding.** This file preserves the pre-cutover Funnel setup evidence. New Vercel→NAS origins use a dedicated Cloudflare custom hostname as primary; GPTERS currently uses `https://gpters-api.rebridge.work`. The existing Funnel handler remains only as the tested rollback path. Current operations are documented in `docs/setup.md`, `docs/runbooks/nas-hard-cutover.md`, and `/Users/seunghyun/.hermes/workspaces/agent-ops/runbooks/vercel-to-nas-public-ingress.md`.
+
 Updated: 2026-08-06
 Status: prepared only; no Funnel mutation performed
 

@@ -1,5 +1,7 @@
 # Supabase → NAS PostgreSQL 단순 이전 계획
 
+> **Historical pre-cutover plan.** The architecture and URL below record the original migration design and must not be used as the current Vercel origin. Current production uses `https://gpters-api.rebridge.work` through Cloudflare Tunnel; the old Funnel URL is retained only for ingress rollback. Use `docs/setup.md` and `docs/runbooks/nas-hard-cutover.md` for current operations.
+
 ## 운영 모델
 
 - 서비스는 사실상 정적이다.
