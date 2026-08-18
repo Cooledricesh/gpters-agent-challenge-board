@@ -26,7 +26,7 @@ Seunghyun explicitly approved preparing all prerequisites and executing the migr
 
 - Backup `gpters_challenge_board_20260818_140626.dump` passed archive validation.
 - Isolated PostgreSQL 17 restore reproduced all four live table counts and UTC-normalized full-row hashes exactly.
-- GitHub `main` contains NAS-only commit `33c8937f4e1675652c4313922f4bf23c7acdfccb` before this ingress-documentation update.
+- GitHub `main` is NAS-only and must match `origin/main` with a clean worktree at each release verification. Do not pin the latest documentation commit here because documentation-only pushes also create a new Vercel production deployment.
 - Tests `70/70`, lint, production build, and production dependency audit (`0` vulnerabilities) passed.
 - Vercel Production/Preview Supabase variables and legacy backend/write selectors were removed.
 - Canonical root and login returned 200 before and after Supabase deletion; NAS API logged `GET /v1/board` 200; container remained healthy with restart count 0.
@@ -38,7 +38,7 @@ Seunghyun explicitly approved preparing all prerequisites and executing the migr
 - NAS cloudflared maps this hostname to `http://127.0.0.1:18887`; config validation passed and the connector established four HA QUIC connections with zero request errors.
 - New-origin health returned 200, unauthenticated `/v1/board` returned 401, and an authenticated board request returned 200 with current NAS data.
 - Existing SA and Daycare health endpoints remained 200 after the additive config change and cloudflared-only restart.
-- Production deployment `dpl_68SGh176Z8VjppoDjiAjaixE5xAV` is Ready on the canonical alias.
+- A new production deployment became Ready on the canonical alias. Resolve the current immutable deployment ID from that alias at incident time; do not pin it in this repository because updating the ID itself creates another deployment.
 - Ten canonical root probes returned 200. In the same window cloudflared total requests increased exactly `19 → 29`, its 200 counter increased `18 → 28`, request errors remained zero, and matching NAS board requests returned 200.
 - The previous Funnel path remains configured and verified as the ingress rollback value; it is no longer the Vercel primary origin.
 
