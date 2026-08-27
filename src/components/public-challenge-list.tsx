@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePostHog } from "posthog-js/react";
 
 import { ProgressBar } from "@/components/board-ui";
 import ChallengeExamples from "@/components/challenge-examples";
@@ -45,6 +46,16 @@ export default function PublicChallengeList({
 }) {
   const [selected, setSelected] = useState<PublicChallenge | null>(null);
   const [view, setView] = useState<"tree" | "list">("tree");
+  const posthog = usePostHog();
+
+  const handleSelect = (challenge: PublicChallenge) => {
+    setSelected(challenge);
+    posthog?.capture("challenge_detail_opened", {
+      challenge_id: challenge.id,
+      challenge_tier: challenge.tier,
+      challenge_level: challenge.level,
+    });
+  };
 
   return (
     <>
@@ -59,7 +70,7 @@ export default function PublicChallengeList({
           }))}
           onSelect={(item) => {
             const found = challenges.find((c) => c.id === item.id);
-            if (found) setSelected(found);
+            if (found) handleSelect(found);
           }}
         />
       ) : (
@@ -71,7 +82,7 @@ export default function PublicChallengeList({
             <li key={c.id}>
               <button
                 type="button"
-                onClick={() => setSelected(c)}
+                onClick={() => handleSelect(c)}
                 className="block w-full rounded border border-zinc-200 bg-white p-3 text-left text-sm transition hover:border-indigo-300 hover:bg-indigo-50/40 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-indigo-800"
                 aria-label={`${c.title} 상세 보기`}
               >

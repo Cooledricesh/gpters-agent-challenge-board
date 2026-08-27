@@ -1,6 +1,10 @@
+"use client";
+
 /**
  * view-toggle.tsx — 기술트리/목록 보기 전환 토글. /, /my 공용.
  */
+
+import { usePostHog } from "posthog-js/react";
 
 export default function ViewToggle({
   view,
@@ -9,6 +13,7 @@ export default function ViewToggle({
   view: "tree" | "list";
   onChange: (view: "tree" | "list") => void;
 }) {
+  const posthog = usePostHog();
   const base = "rounded-full px-3 py-1 text-xs font-semibold transition";
   const active = "bg-indigo-600 text-white shadow-sm";
   const inactive = "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800";
@@ -16,7 +21,10 @@ export default function ViewToggle({
     <div className="mb-3 inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900">
       <button
         type="button"
-        onClick={() => onChange("tree")}
+        onClick={() => {
+          onChange("tree");
+          posthog?.capture("board_view_changed", { view: "tree" });
+        }}
         aria-pressed={view === "tree"}
         className={`${base} ${view === "tree" ? active : inactive}`}
       >
@@ -24,7 +32,10 @@ export default function ViewToggle({
       </button>
       <button
         type="button"
-        onClick={() => onChange("list")}
+        onClick={() => {
+          onChange("list");
+          posthog?.capture("board_view_changed", { view: "list" });
+        }}
         aria-pressed={view === "list"}
         className={`${base} ${view === "list" ? active : inactive}`}
       >
