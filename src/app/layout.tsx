@@ -6,6 +6,7 @@ import "./globals.css";
 import { getCurrentSession } from "@/lib/session";
 import { CURRENT_COHORT } from "@/lib/cohort";
 import LogoutButton from "@/components/logout-button";
+import { PostHogProvider } from "@/providers/posthog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <PostHogProvider>
         <header className="border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
           <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 text-sm">
             <Link href="/" className="font-semibold tracking-tight">
@@ -78,6 +80,7 @@ export default async function RootLayout({
         <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-center text-xs text-zinc-400">
           지피터스 {CURRENT_COHORT} · 반려 에이전트 챌린지
         </footer>
+        </PostHogProvider>
       </body>
     </html>
   );

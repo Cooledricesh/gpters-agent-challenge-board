@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { usePostHog } from "posthog-js/react";
 
 import {
   challengeTierLabel,
@@ -51,6 +52,7 @@ function buildPrereqInfo(items: readonly ChallengeItem[]): Map<string, PrereqInf
 
 export default function ChallengeChecklist({ initial }: { initial: ChallengeItem[] }) {
   const router = useRouter();
+  const posthog = usePostHog();
   const [items, setItems] = useState(initial);
   const [selected, setSelected] = useState<ChallengeItem | null>(null);
   const [view, setView] = useState<"tree" | "list">("tree");
@@ -58,7 +60,24 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
+  const handleSelect = (item: ChallengeItem) => {
+    setSelected(item);
+    posthog?.capture("challenge_detail_opened", {
+      challenge_id: item.id,
+      challenge_tier: item.tier,
+      challenge_level: item.level,
+    });
+  };
+
   const toggle = (id: string, nextDone: boolean) => {
+    const item = items.find((it) => it.id === id);
+    if (item) {
+      posthog?.capture(nextDone ? "challenge_completed" : "challenge_uncompleted", {
+        challenge_id: id,
+        challenge_tier: item.tier,
+        challenge_level: item.level,
+      });
+    }
     setError(null);
     setPendingId(id);
     // optimistic: 체크 즉시 개인 화면의 과제별 완료 인원도 반영한다.
@@ -168,7 +187,7 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
           }))}
           onSelect={(item) => {
             const found = items.find((it) => it.id === item.id);
-            if (found) setSelected(found);
+            if (found) handleSelect(found);
           }}
         />
       ) : (
@@ -181,7 +200,7 @@ export default function ChallengeChecklist({ initial }: { initial: ChallengeItem
             prereqInfo={prereqInfo}
             pendingId={pendingId}
             onToggle={toggle}
-            onSelect={setSelected}
+            onSelect={handleSelect}
           />
         ))
       )}
